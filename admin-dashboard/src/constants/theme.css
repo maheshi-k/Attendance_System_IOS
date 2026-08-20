@@ -1,0 +1,25 @@
+@theme {
+  --spacing-sidebar: 255px;
+  --spacing-sideheader: 110px;
+  --spacing-content: 28px;
+
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+}
+
+:root {
+    --primary: #f7f8f7;
+    --secondary-opc-10:#e4f0db;
+
+    --text-primary: #252525;
+    --text-primary-dark: #191c1d;
+    --text-primary-light: #625e58;
+    --text-primary-opc-10: #e7e8e9;
+    --text-secondary: #397000;
+    --text-secondary-dark: #315d08;
+}
