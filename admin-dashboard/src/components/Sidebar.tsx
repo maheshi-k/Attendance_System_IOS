@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { NavLink, useLocation } from "react-router-dom";
 import { ChevronDown, PlusCircle } from "lucide-react";
 import { menuItems, bottomItems } from "../config/navigation";
@@ -6,6 +7,7 @@ import Logo from "../assets/Logo.png";
 
 function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
 
   const toggleMenu = (label: string) => {
@@ -24,10 +26,16 @@ function Sidebar() {
 
   return (
     <aside className="hidden min-h-screen w-sidebar shrink-0 flex-col border-r border-gray-200 bg-white lg:flex">
-      <div className="flex h-[124px] items-center gap-4 px-[30px]">
+      <div
+        className="flex h-[124px] items-center gap-4 px-[30px] cursor-pointer"
+        onClick={() => navigate("/dashboard")}
+      >
         <img
           src={Logo}
           alt="Logo"
+          onClick={() => {
+            navigate("/dashboard");
+          }}
           className="h-[45px] w-[45px] rounded-md object-contain"
         />
 
@@ -117,13 +125,13 @@ function Sidebar() {
       </nav>
 
       <div className="mt-auto px-4 pb-4">
-        <button
+        {/* <button
           type="button"
           className="flex h-[47px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--text-secondary)] text-base font-bold text-white transition hover:bg-[var(--text-secondary-dark)]"
         >
           <PlusCircle size={21} strokeWidth={2} />
           <span>Generate Report</span>
-        </button>
+        </button> */}
       </div>
 
       <div className="border-t border-gray-200 px-2 py-4">

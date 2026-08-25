@@ -1,4 +1,4 @@
-import { getAllEmployees, createEmployee, getEmployeeByID, UpdateEmployeeByID ,updateEmployeeStatus, getEmployeeByStatus } from "../services/employee.service.js";
+import { getAllEmployees, createEmployee, getEmployeeByID, UpdateEmployeeByID ,updateEmployeeStatus, getEmployeeByStatus, deleteEmployee, getActiveEmployeeCount } from "../services/employee.service.js";
 
 export const getEmployee = async (req, res) => {
     try{
@@ -20,7 +20,16 @@ export const getEmployee = async (req, res) => {
 
 export const addEmployee = async (req, res) => {
   try {
-    const employee = await createEmployee(req.body);
+    const designationHistory = req.body.designation_history
+      ? JSON.parse(req.body.designation_history)
+      : undefined;
+    const employeeData = {
+      ...req.body,
+      profile_photo: req.file?.buffer || null,
+      designation_history: designationHistory,
+    };
+
+    const employee = await createEmployee(employeeData);
 
     res.status(201).json({
       success: true,
@@ -66,41 +75,62 @@ export const getEmployeeById = async (req, res) => {
 
 export const updateEmployee = async (req, res) => {
   try {
-
     const { id } = req.params;
+    const designationHistory = req.body.designation_history
+      ? JSON.parse(req.body.designation_history)
+      : undefined;
 
     const {
       first_name,
       last_name,
-      email,
+      email_1,
+      email_2,
       password,
+      nic,
+      gender,
+      address,
       role_id,
-      profile_photo,
       employment_status,
-      mobile_no,
+      mobile_no_1,
+      mobile_no_2,
+      joining_date,
+      designation,
+      is_present,
+      effective_to,
     } = req.body;
 
     if (
       !first_name ||
       !last_name ||
-      !email ||
+      !email_1 ||
       !role_id
     ) {
       return res.status(400).json({
         success: false,
-        message: "First name, last name, email and role are required",
+        message:
+          "First name, last name, email and role are required",
       });
     }
 
     const employee = await UpdateEmployeeByID(id, {
       first_name,
       last_name,
-      email,
+      email_1,
+      email_2,
       password,
+      nic,
+      gender,
+      address,
       role_id,
-      profile_photo,
+      profile_photo: req.file?.buffer,
       employment_status,
-      mobile_no,
+      mobile_no_1,
+      mobile_no_2,
+      joining_date,
+      designation,
+      is_present,
+      effective_to,
+      designation_history: designationHistory,
     });
 
     if (!employee) {
@@ -163,6 +193,31 @@ export const updateEmployeeStatusByID = async (req,res) => {
   }
 }
 
+export const deleteEmployeeByID = async (req, res) => {
+  try {
+    const deleted = await deleteEmployee(req.params.id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Employee deactivated successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting employee:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete employee",
+    });
+  }
+};
+
 export const getEmployeeByStatusController = async (req, res) => {
     try{
       const { status } = req.params;
@@ -189,5 +244,23 @@ export const getEmployeeByStatusController = async (req, res) => {
         })
     }
 }
+
+export const getActiveEmployeeCountController = async (req, res) => {
+  try {
+    const count = await getActiveEmployeeCount();
+
+    res.status(200).json({
+      success: true,
+      count,
+    });
+  } catch (error) {
+    console.error("Failed to get active employee count:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to get active employee count",
+    });
+  }
+};
 
 

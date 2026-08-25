@@ -2,6 +2,23 @@ import sql from "mssql";
 
 const MIN_CHECKOUT_HOURS = 4;
 
+const profilePhotoDataUrl = (photo) => {
+  if (!photo) return null;
+
+  const buffer = Buffer.isBuffer(photo)
+    ? photo
+    : Buffer.from(photo.data || photo);
+  const isPng = buffer.subarray(0, 8).equals(
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+  );
+  const isWebp =
+    buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+    buffer.subarray(8, 12).toString("ascii") === "WEBP";
+  const mimeType = isPng ? "image/png" : isWebp ? "image/webp" : "image/jpeg";
+
+  return `data:${mimeType};base64,${buffer.toString("base64")}`;
+};
+
 export const markAttendance = async (emp_id, qr_token) => {
   // 1. Check employee
   const employeeResult = await sql.query`
@@ -148,7 +165,8 @@ export const getAllAttendance = async (date) => {
         e.emp_code,
         e.first_name,
         e.last_name,
-        e.email,
+        e.designation,
+        e.email_1 AS email,
         e.profile_photo,
         a.att_date,
         CONVERT(varchar(8), a.check_in, 108) AS check_in,
@@ -172,7 +190,8 @@ export const getAllAttendance = async (date) => {
         e.emp_code,
         e.first_name,
         e.last_name,
-        e.email,
+        e.designation,
+        e.email_1 AS email,
         e.profile_photo,
         a.att_date,
         CONVERT(varchar(8), a.check_in, 108) AS check_in,
@@ -189,7 +208,127 @@ export const getAllAttendance = async (date) => {
     `;
   }
 
-  return result.recordset;
+  return result.recordset.map((record) => ({
+    ...record,
+    profile_photo: profilePhotoDataUrl(record.profile_photo),
+  }));
+};
+
+export const addManualAttendance = async ({
+  emp_id,
+  att_date,
+  check_in,
+  check_out,
+  status,
+}) => {
+  const request = new sql.Request();
+  request.input("emp_id", sql.Int, emp_id);
+  request.input("att_date", sql.Date, att_date);
+  request.input("check_in", sql.VarChar(8), check_in);
+  request.input("check_out", sql.VarChar(8), check_out || null);
+  request.input("status", sql.VarChar(20), status);
+
+  const result = await request.query(`
+    INSERT INTO ATT_Attendance (
+      emp_id,
+      att_date,
+      check_in,
+      check_out,
+      status
+    )
+    OUTPUT
+      INSERTED.att_id,
+      INSERTED.emp_id,
+      INSERTED.att_date,
+      INSERTED.check_in,
+      INSERTED.check_out,
+      INSERTED.status,
+      INSERTED.created_at,
+      INSERTED.updated_at
+    VALUES (
+      @emp_id,
+      @att_date,
+      CONVERT(TIME, @check_in),
+      CONVERT(TIME, @check_out),
+      @status
+    )
+  `);
+
+  return result.recordset[0];
+};
+
+export const getAttendanceByID = async (att_id) => {
+  const request = new sql.Request();
+  request.input("att_id", sql.Int, att_id);
+
+  const result = await request.query(`
+    SELECT
+      a.att_id,
+      a.emp_id,
+      e.emp_code,
+      e.first_name,
+      e.last_name,
+      e.designation,
+      e.email_1 AS email,
+      e.profile_photo,
+      a.att_date,
+      CONVERT(varchar(8), a.check_in, 108) AS check_in,
+      CONVERT(varchar(8), a.check_out, 108) AS check_out,
+      a.status,
+      a.created_at,
+      a.updated_at
+    FROM ATT_Attendance a
+    INNER JOIN EMP_Emp e ON a.emp_id = e.emp_id
+    WHERE a.att_id = @att_id
+  `);
+
+  const attendance = result.recordset[0];
+  return attendance
+    ? {
+        ...attendance,
+        profile_photo: profilePhotoDataUrl(attendance.profile_photo),
+      }
+    : null;
+};
+
+export const updateManualAttendance = async ({
+  att_id,
+  emp_id,
+  att_date,
+  check_in,
+  check_out,
+  status,
+}) => {
+  const request = new sql.Request();
+  request.input("att_id", sql.Int, att_id);
+  request.input("emp_id", sql.Int, emp_id);
+  request.input("att_date", sql.Date, att_date);
+  request.input("check_in", sql.VarChar(8), check_in);
+  request.input("check_out", sql.VarChar(8), check_out || null);
+  request.input("status", sql.VarChar(20), status);
+
+  const result = await request.query(`
+    UPDATE ATT_Attendance
+    SET
+      emp_id = @emp_id,
+      att_date = @att_date,
+      check_in = CONVERT(TIME, @check_in),
+      check_out = CONVERT(TIME, @check_out),
+      status = @status,
+      updated_at = GETDATE()
+    OUTPUT
+      INSERTED.att_id,
+      INSERTED.emp_id,
+      INSERTED.att_date,
+      INSERTED.check_in,
+      INSERTED.check_out,
+      INSERTED.status,
+      INSERTED.created_at,
+      INSERTED.updated_at
+    WHERE att_id = @att_id
+  `);
+
+  return result.recordset[0] || null;
 };
 
 export const getAttendanceByEmpID = async(emp_id, date) => {
@@ -203,7 +342,8 @@ export const getAttendanceByEmpID = async(emp_id, date) => {
         e.emp_code,
         e.first_name,
         e.last_name,
-        e.email,
+        e.designation,
+        e.email_1 AS email,
         e.profile_photo,
         a.att_date,
         CONVERT(varchar(8), a.check_in, 108) AS check_in,
@@ -229,7 +369,8 @@ export const getAttendanceByEmpID = async(emp_id, date) => {
         e.emp_code,
         e.first_name,
         e.last_name,
-        e.email,
+        e.designation,
+        e.email_1 AS email,
         e.profile_photo,
         a.att_date,
         CONVERT(varchar(8), a.check_in, 108) AS check_in,
@@ -247,6 +388,9 @@ export const getAttendanceByEmpID = async(emp_id, date) => {
     `;
   }
 
-  return result.recordset;
+  return result.recordset.map((record) => ({
+    ...record,
+    profile_photo: profilePhotoDataUrl(record.profile_photo),
+  }));
 };
 

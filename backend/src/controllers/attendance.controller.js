@@ -1,4 +1,4 @@
-import { markAttendance, getAllAttendance , getAttendanceByEmpID } from "../services/attendance.service.js";
+import { markAttendance, getAllAttendance , getAttendanceByEmpID, addManualAttendance, getAttendanceByID, updateManualAttendance } from "../services/attendance.service.js";
 
 export const markAttendanceController = async (req, res) => {
   try {
@@ -93,6 +93,39 @@ export const getAttendanceController = async (req,res) => {
   }
 }
 
+export const addManualAttendanceController = async (req, res) => {
+  try {
+    const { emp_id, att_date, check_in, check_out, status } = req.body;
+
+    if (!emp_id || !att_date || !check_in || !status) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee, date, check-in time and status are required",
+      });
+    }
+
+    const attendance = await addManualAttendance({
+      emp_id,
+      att_date,
+      check_in,
+      check_out,
+      status,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Attendance added successfully",
+      data: attendance,
+    });
+  } catch (error) {
+    console.error("Error adding attendance:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to add attendance. The employee may already have a record for this date.",
+    });
+  }
+};
+
 export const getAttendanceByEmpIDController = async (req, res) => {
   try {
     const { id } = req.params;
@@ -118,5 +151,55 @@ export const getAttendanceByEmpIDController = async (req, res) => {
       success: false,
       message: "Failed to get employee attendance",
     });
+  }
+};
+
+export const getAttendanceByIDController = async (req, res) => {
+  try {
+    const attendance = await getAttendanceByID(req.params.id);
+
+    if (!attendance) {
+      return res.status(404).json({ success: false, message: "Attendance record not found" });
+    }
+
+    return res.status(200).json({ success: true, data: attendance });
+  } catch (error) {
+    console.error("Error retrieving attendance record:", error);
+    return res.status(500).json({ success: false, message: "Failed to retrieve attendance record" });
+  }
+};
+
+export const updateManualAttendanceController = async (req, res) => {
+  try {
+    const { emp_id, att_date, check_in, check_out, status } = req.body;
+
+    if (!emp_id || !att_date || !check_in || !status) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee, date, check-in time and status are required",
+      });
+    }
+
+    const attendance = await updateManualAttendance({
+      att_id: req.params.id,
+      emp_id,
+      att_date,
+      check_in,
+      check_out,
+      status,
+    });
+
+    if (!attendance) {
+      return res.status(404).json({ success: false, message: "Attendance record not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Attendance updated successfully",
+      data: attendance,
+    });
+  } catch (error) {
+    console.error("Error updating attendance:", error);
+    return res.status(500).json({ success: false, message: "Failed to update attendance record" });
   }
 };

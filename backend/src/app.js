@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes.js";
 import roleRoutes from "./routes/role.routes.js";
 import qrRoutes from "./routes/qr.routes.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
+import designationRoutes from "./routes/designation.routes.js";
 
 const app = express();
 
@@ -26,5 +27,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/role", roleRoutes);
 app.use("/api/qr", qrRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/designations", designationRoutes);
 
 export default app;

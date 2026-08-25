@@ -1,149 +1,119 @@
-import { ChevronDown, Download, UserPlus } from "lucide-react";
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import {
-  getAllEmployees,
-  getEmployeesByStatus,
-} from "../../services/employee.service";
-import type { EmployeeRecord, EmployeeStatus } from "../../types/employee";
+import { getAllEmployees } from "../../services/employee.service";
+import type { EmployeeExportRow, EmployeeRecord } from "../../types/employee";
+import ExportData, { type ExportColumn } from "../common/ExportData";
 
 import EmployeeTable from "./EmployeeTable";
 import EmployeePagination from "./EmployeePagination";
+import EmployeeDrawer from "./EmployeeDrawer";
+import EmployeeHeader from "./EmployeeHeader";
+import EmployeeFilters from "./EmployeeFilters";
+import { useEmployees } from "./useEmployees.ts";
+
+const employeeExportColumns: ExportColumn<EmployeeExportRow>[] = [
+  { header: "Employee ID", value: "employeeId", width: 16 },
+  { header: "First Name", value: "firstName", width: 16 },
+  { header: "Last Name", value: "lastName", width: 16 },
+  { header: "Email 1", value: "email1", width: 28 },
+  { header: "Email 2", value: "email2", width: 28 },
+  { header: "Mobile Number 1", value: "mobile1", width: 18 },
+  { header: "Mobile Number 2", value: "mobile2", width: 18 },
+  { header: "NIC", value: "nic", width: 16 },
+  { header: "Gender", value: "gender", width: 12 },
+  { header: "Address", value: "address", width: 32 },
+  { header: "Role", value: "role", width: 18 },
+  { header: "Designation", value: "designation", width: 28 },
+  { header: "Employment Status", value: "employmentStatus", width: 20 },
+  { header: "Joining Date", value: "joiningDate", width: 16 },
+  { header: "Account Status", value: "accountStatus", width: 16 },
+  { header: "Profile Photo", value: "profilePhoto", width: 18 },
+  { header: "Created At", value: "createdAt", width: 22 },
+  { header: "Updated At", value: "updatedAt", width: 22 },
+];
 
 function Employee() {
   const navigate = useNavigate();
-  const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<EmployeeRecord | null>(null);
+  const {
+    employees,
+    loading,
+    error,
+    selectedStatus,
+    selectedDesignation,
+    designationOptions,
+    totalEmployees,
+    totalPages,
+    currentPage,
+    rowsPerPage,
+    startIndex,
+    endIndex,
+    setSelectedStatus,
+    setSelectedDesignation,
+    setCurrentPage,
+    setRowsPerPage,
+    deactivateEmployee,
+  } = useEmployees();
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-
-  //Filter Section
-  const [selectedStatus, setSelectedStatus] = useState<
-    "All Status" | EmployeeStatus
-  >("All Status");
-
-  const totalEmployees = employees.length;
-
-  const totalPages = Math.ceil(totalEmployees / rowsPerPage);
-
-  const startIndex = (currentPage - 1) * rowsPerPage;
-
-  const endIndex = Math.min(startIndex + rowsPerPage, totalEmployees);
-
-  const currentEmployees = employees.slice(startIndex, endIndex);
-
-  useEffect(() => {
-    const loadEmployees = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        let response;
-
-        if (selectedStatus === "All Status") {
-          response = await getAllEmployees();
-        } else {
-          response = await getEmployeesByStatus(selectedStatus);
-        }
-
-        console.log("Employees API response:", response);
-
-        setEmployees(response.data);
-
-        // Go back to first page when filter changes
-        setCurrentPage(1);
-      } catch (error) {
-        console.error("Failed to load employees:", error);
-
-        setError("Failed to load employees");
-        setEmployees([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadEmployees();
-  }, [selectedStatus]);
+  const loadEmployeeExportData = async (): Promise<EmployeeExportRow[]> => {
+    const response = await getAllEmployees();
+    return response.data.map((employee) => ({
+      employeeId: employee.emp_code,
+      firstName: employee.first_name,
+      lastName: employee.last_name,
+      email1: employee.email_1,
+      email2: employee.email_2 || "",
+      mobile1: employee.mobile_no_1,
+      mobile2: employee.mobile_no_2 || "",
+      nic: employee.nic,
+      gender: employee.gender,
+      address: employee.address || "",
+      role: employee.role_name,
+      designation: employee.designation || "",
+      employmentStatus: employee.employment_status,
+      joiningDate: employee.joining_date,
+      accountStatus: employee.is_active ? "Active" : "Inactive",
+      profilePhoto: employee.profile_photo ? "Available" : "Not available",
+      createdAt: employee.created_at,
+      updatedAt: employee.updated_at,
+    }));
+  };
 
   return (
     <section className="flex min-h-full flex-col gap-6 p-8">
-      {/* Header */}
-      <div className="flex items-end justify-between gap-6 pb-2">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-[32px] font-semibold leading-10 tracking-[-0.32px] text-[var(--text-primary-dark)]">
-            Employee Directory
-          </h1>
-
-          <p className="text-base leading-6 text-[var(--text-primary-light)]">
-            Manage institutional records, access levels, and QR identities.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="flex items-center gap-2 rounded-xl border border-[rgba(194,201,181,0.3)] bg-[var(--text-primary-opc-10)] px-[21px] py-[11px] text-sm font-semibold text-[#424939] transition hover:bg-[#dcddde]"
-          >
-            <Download size={15} />
-            Export
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/employees/add")}
-            className="flex items-center gap-2 rounded-xl bg-[#7fb249] px-6 py-2.5 text-sm font-bold text-[#234100] shadow-[0_10px_15px_-3px_rgba(127,178,73,0.1)] transition hover:bg-[#72a13f]"
-          >
-            <UserPlus size={16} />
-            Add Employee
-          </button>
-        </div>
-      </div>
-
-      {/* Filter */}
-      <div className="flex items-center justify-between rounded-2xl border border-[rgba(194,201,181,0.3)] bg-white p-[17px]">
-        <div className="relative">
-          <select
-            aria-label="Filter employees by status"
-            value={selectedStatus}
-            onChange={(event) =>
-              setSelectedStatus(
-                event.target.value as "All Status" | EmployeeStatus,
-              )
-            }
-            className="h-9 w-[136px] appearance-none rounded-lg bg-[#f3f4f5] px-4 pr-9 text-sm font-medium text-[#191c1d] outline-none"
-          >
-            <option>All Status</option>
-            <option>Active</option>
-            <option>On Leave</option>
-            <option>Probation</option>
-          </select>
-
-          <ChevronDown
-            size={16}
-            strokeWidth={2}
-            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#625e58]"
+      <EmployeeHeader
+        exportAction={
+          <ExportData
+            data={loadEmployeeExportData}
+            columns={employeeExportColumns}
+            fileName="employees"
+            sheetName="Employees"
+            label="Export"
           />
-        </div>
-
-        <p className="text-[13px] font-medium tracking-[0.65px] text-[#625e58]">
-          {totalEmployees === 0
-            ? "Showing 0 employees"
-            : `Showing ${startIndex + 1}-${endIndex} of ${totalEmployees} employees`}
-        </p>
-      </div>
+        }
+        onAddEmployee={() => navigate("/employees/add")}
+      />
+      <EmployeeFilters
+        selectedStatus={selectedStatus}
+        selectedDesignation={selectedDesignation}
+        designationOptions={designationOptions}
+        totalEmployees={totalEmployees}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        onStatusChange={setSelectedStatus}
+        onDesignationChange={setSelectedDesignation}
+      />
 
       {/* Employee Table */}
       <EmployeeTable
-        employees={currentEmployees}
+        employees={employees}
         loading={loading}
         error={error}
+        onDelete={deactivateEmployee}
+        onView={setSelectedEmployee}
       />
-
       <EmployeePagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -154,6 +124,13 @@ function Employee() {
         onPageChange={setCurrentPage}
         onRowsPerPageChange={setRowsPerPage}
       />
+
+      {selectedEmployee && (
+        <EmployeeDrawer
+          employee={selectedEmployee}
+          onClose={() => setSelectedEmployee(null)}
+        />
+      )}
     </section>
   );
 }

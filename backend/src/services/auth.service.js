@@ -2,23 +2,23 @@ import sql from "mssql";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-export const loginEmployee = async (email, password) => {
+export const loginEmployee = async (email_1, password) => {
   const result = await sql.query`
     SELECT
       emp_id,
       emp_code,
       first_name,
       last_name,
-      email,
+      email_1,
       password_hash,
       role_id,
       is_active
     FROM EMP_Emp
-    WHERE email = ${email}
+    WHERE email_1 = ${email_1}
   `;
 
   if (result.recordset.length === 0) {
-    throw new Error("Invalid email or password");
+    throw new Error("Invalid email_1 or password");
   }
 
   const employee = result.recordset[0];
@@ -33,7 +33,7 @@ export const loginEmployee = async (email, password) => {
   );
 
   if (!passwordMatch) {
-    throw new Error("Invalid email or password");
+    throw new Error("Invalid email_1 or password");
   }
 
   const token = jwt.sign(
@@ -41,7 +41,7 @@ export const loginEmployee = async (email, password) => {
       emp_id: employee.emp_id,
       emp_code: employee.emp_code,
       role_id: employee.role_id,
-      email: employee.email,
+      email_1: employee.email_1,
     },
     process.env.JWT_SECRET,
     {
@@ -56,7 +56,7 @@ return {
       emp_code: employee.emp_code,
       first_name: employee.first_name,
       last_name: employee.last_name,
-      email: employee.email,
+      email_1: employee.email_1,
       role_id: employee.role_id,
       is_active: employee.is_active,
     },

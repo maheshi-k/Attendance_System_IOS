@@ -4,6 +4,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "migrate": "node migrations/001_create_tables.js",
     "dev": "nodemon index.js",
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,6 +22,7 @@
     "jsonwebtoken": "^9.0.3",
     "msnodesqlv8": "^5.2.3",
     "mssql": "^12.7.0",
+    "multer": "^2.2.0",
     "mysql2": "^3.23.3"
   },
   "devDependencies": {

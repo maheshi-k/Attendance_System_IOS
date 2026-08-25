@@ -1,4 +1,5 @@
 import { Eye, Pencil, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import type { EmployeeRecord } from "../../types/employee";
 import EmployeeStatusBadge from "./EmployeeStatusBadge";
@@ -7,12 +8,22 @@ type EmployeeTableProps = {
   employees: EmployeeRecord[];
   loading: boolean;
   error: string;
+  onDelete: (employee: EmployeeRecord) => void;
+  onView: (employee: EmployeeRecord) => void;
 };
 
-function EmployeeTable({ employees, loading, error }: EmployeeTableProps) {
+function EmployeeTable({
+  employees,
+  loading,
+  error,
+  onDelete,
+  onView,
+}: EmployeeTableProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="overflow-hidden rounded-2xl border border-[rgba(194,201,181,0.3)] bg-white">
-      <div className="max-h-[400px] overflow-x-auto">
+      <div className="max-h-[500px] overflow-x-auto">
         <table className="min-w-[1000px] w-full table-fixed border-collapse">
           <colgroup>
             <col className="w-[192px]" />
@@ -100,18 +111,18 @@ function EmployeeTable({ employees, loading, error }: EmployeeTableProps) {
                   {/* Designation */}
                   <td className="px-6">
                     <p className="text-sm font-medium leading-5 text-[#191c1d]">
-                      {employee.role_name}
+                      {employee.designation}
                     </p>
                   </td>
 
                   {/* Contact */}
                   <td className="px-6">
                     <p className="text-sm leading-5 text-[#191c1d]">
-                      {employee.email}
+                      {employee.email_1}
                     </p>
 
                     <p className="text-xs leading-4 text-[#625e58]">
-                      {employee.mobile_no || "No phone number"}
+                      {employee.mobile_no_1 || "No phone number"}
                     </p>
                   </td>
 
@@ -127,6 +138,7 @@ function EmployeeTable({ employees, loading, error }: EmployeeTableProps) {
                         type="button"
                         aria-label={`View ${employee.first_name}`}
                         title="View"
+                        onClick={() => onView(employee)}
                         className="rounded-lg p-2 text-[#625e58] transition hover:bg-[#f3f4f5]"
                       >
                         <Eye size={18} />
@@ -136,6 +148,9 @@ function EmployeeTable({ employees, loading, error }: EmployeeTableProps) {
                         type="button"
                         aria-label={`Edit ${employee.first_name}`}
                         title="Edit"
+                        onClick={() =>
+                          navigate(`/employees/${employee.emp_id}/edit`)
+                        }
                         className="rounded-lg p-2 text-[#625e58] transition hover:bg-[#f3f4f5]"
                       >
                         <Pencil size={15} />
@@ -143,8 +158,9 @@ function EmployeeTable({ employees, loading, error }: EmployeeTableProps) {
 
                       <button
                         type="button"
-                        aria-label={`Delete ${employee.first_name}`}
-                        title="Delete"
+                        aria-label={`Deactivate ${employee.first_name}`}
+                        title="Deactivate"
+                        onClick={() => onDelete(employee)}
                         className="rounded-lg p-2 text-[#625e58] transition hover:bg-[#f3f4f5]"
                       >
                         <Trash2 size={17} />
