@@ -1,4 +1,4 @@
-import { MapPin, Pencil, Trash2 } from "lucide-react";
+import { MapPin, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AttendanceRecord } from "../../types/attendance";
 
@@ -35,7 +35,7 @@ function AttendanceTable({
               <th className="w-[10%] px-4 py-4">Emp ID</th>
               <th className="w-[10%] px-4 py-4">Check In</th>
               <th className="w-[10%] px-4 py-4">Check Out</th>
-              <th className="w-[8%] px-4 py-4">Hours</th>
+              <th className="w-[10%] px-4 py-4">Hours</th>
               <th className="w-[9%] px-4 py-4">Status</th>
               <th className="w-[15%] px-4 py-4">Location</th>
               <th className="w-[5%] px-4 py-4">Actions</th>
@@ -111,9 +111,9 @@ function AttendanceTable({
                         {record.check_in ? (
                           <>
                             <span>{record.check_in.slice(0, 5)}</span>
-                            <span className="block text-[10px] uppercase text-[#625e58]">
+                            {/* <span className="block text-[10px] uppercase text-[#625e58]">
                               On time
-                            </span>
+                            </span> */}
                           </>
                         ) : (
                           <span className="text-xs uppercase text-[#aaa5a1]">

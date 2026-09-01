@@ -1,9 +1,43 @@
+import { useEffect, useState } from "react";
 import { Bell, Search, Settings } from "lucide-react";
+import defaultProfile from "../assets/avatar.png";
 
-const administratorProfile =
-  "https://www.figma.com/api/mcp/asset/72855ea9-370d-40c2-be9a-c5e05d35be4e.png";
+type EmployeeProfile = {
+  first_name?: string;
+  last_name?: string;
+  role_name?: string;
+  profile_photo?: string | null;
+};
 
 function Header() {
+  const [user, setUser] = useState<EmployeeProfile>({});
+
+  useEffect(() => {
+    const readUser = () => {
+      try {
+        const storedUser = localStorage.getItem("attendance_employee");
+        if (!storedUser) {
+          setUser({});
+          return;
+        }
+
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser({});
+      }
+    };
+
+    readUser();
+    window.addEventListener("auth:change", readUser);
+
+    return () => window.removeEventListener("auth:change", readUser);
+  }, []);
+
+  const fullName =
+    [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+    "Administrator";
+  const profileImage = user.profile_photo || defaultProfile;
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-[rgba(194,201,181,0.3)] bg-[rgba(248,249,250,0.8)] px-6 backdrop-blur-[6px]">
       <div className="relative w-[320px]">
@@ -45,15 +79,15 @@ function Header() {
         <div className="flex items-center gap-2.5">
           <div className="flex flex-col items-end">
             <span className="text-sm font-semibold leading-[17.5px] text-[#191c1d]">
-              Administrator
+              {fullName}
             </span>
             <span className="text-[10px] font-bold leading-[12.5px] tracking-[0.2px] text-[#625e58]">
-              Super User
+              {user.role_name || "User"}
             </span>
           </div>
           <img
-            src={administratorProfile}
-            alt="Administrator profile"
+            src={profileImage}
+            alt={`${fullName} profile`}
             className="h-10 w-10 rounded-full object-cover"
           />
         </div>

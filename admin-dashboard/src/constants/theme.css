@@ -27,6 +27,9 @@
     --icon-muted: #a7af99;
     --text-primary-green: #234100;
     --text-primary-dark-green: #424939;
+    --button-muted: #83BB49;
+    --button-muted-opc-10: #b3dd87;
+    --button-soft:#6d9f53;
 
     --text-primary: #252525;
     --text-primary-dark: #191c1d;
@@ -35,4 +38,5 @@
     --text-primary-light-100: #939393;
     --text-secondary: #397000;
     --text-secondary-dark: #315d08;
+
 }

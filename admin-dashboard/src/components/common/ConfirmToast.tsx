@@ -1,6 +1,3 @@
-import type { Id } from "react-toastify";
-import { toast } from "react-toastify";
-
 interface ConfirmToastProps {
   employeeName: string;
   onConfirm: () => void;

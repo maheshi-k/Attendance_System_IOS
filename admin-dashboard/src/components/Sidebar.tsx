@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavLink, useLocation } from "react-router-dom";
-import { ChevronDown, PlusCircle } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { menuItems, bottomItems } from "../config/navigation";
 import Logo from "../assets/Logo.png";
 
@@ -9,6 +9,26 @@ function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+
+  const userPermissions = useMemo(() => {
+    const storedPermissions = localStorage.getItem("attendance_permissions");
+    const parsedPermissions = storedPermissions
+      ? JSON.parse(storedPermissions)
+      : [];
+
+    return parsedPermissions.map(
+      (permission: { permission_code?: string }) => permission.permission_code,
+    );
+  }, [location.pathname]);
+
+  const visibleMenuItems = useMemo(
+    () =>
+      menuItems.filter((item) => {
+        if (!item.permission) return true;
+        return userPermissions.includes(item.permission);
+      }),
+    [userPermissions],
+  );
 
   const toggleMenu = (label: string) => {
     setExpandedMenu((current) => (current === label ? null : label));
@@ -51,10 +71,19 @@ function Sidebar() {
       </div>
 
       <nav className="px-2">
-        {menuItems.map((item) => {
+        {visibleMenuItems.map((item) => {
           const Icon = item.icon;
 
           if (item.children) {
+            const visibleChildren = item.children.filter(
+              (child) =>
+                !child.permission || userPermissions.includes(child.permission),
+            );
+
+            if (!visibleChildren.length) {
+              return null;
+            }
+
             const isExpanded = expandedMenu === item.label;
 
             return (
@@ -82,7 +111,7 @@ function Sidebar() {
 
                 {isExpanded && (
                   <div className="ml-[48px] space-y-1 py-2">
-                    {item.children.map((child) => (
+                    {visibleChildren.map((child) => (
                       <NavLink
                         key={child.label}
                         to={child.path}
@@ -145,7 +174,10 @@ function Sidebar() {
                 type="button"
                 onClick={() => {
                   setExpandedMenu(null);
-                  console.log("Logout clicked");
+                  localStorage.removeItem("attendance_token");
+                  localStorage.removeItem("attendance_employee");
+                  window.dispatchEvent(new Event("auth:change"));
+                  navigate("/login", { replace: true });
                 }}
                 className="flex h-[42px] w-full items-center gap-3 rounded-lg px-4 text-sm font-medium text-red-600 transition hover:bg-red-50"
               >

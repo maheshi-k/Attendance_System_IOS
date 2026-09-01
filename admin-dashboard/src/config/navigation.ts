@@ -14,6 +14,7 @@ type NavigationItem =
       label: string;
       icon: typeof LayoutDashboard;
       path: string;
+      permission?: string;
       action?: never;
     }
   | {
@@ -28,11 +29,13 @@ export const menuItems = [
     label: "Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
+    permission: "DASHBOARD_VIEW",
   },
   {
     label: "Attendance",
     icon: QrCode,
     path: "/attendance",
+    permission: "ATTENDANCE_VIEW",
   },
   {
     label: "Leaves",
@@ -40,12 +43,19 @@ export const menuItems = [
     expandable: true,
     children: [
       {
-        label: "Leave Requests",
+        label: "Request Management",
         path: "/leaves/requests",
+        permission: "LEAVE_VIEW",
+      },
+      {
+        label: "Leave Management",
+        path: "/leaves/my-requests",
+        permission: "LEAVE_HISTORY_VIEW",
       },
       {
         label: "Leave Types",
         path: "/leaves/types",
+        permission: "LEAVE_VIEW",
       },
     ],
   },
@@ -53,16 +63,19 @@ export const menuItems = [
     label: "Employees",
     icon: Users,
     path: "/employees",
+    permission: "EMPLOYEE_VIEW",
   },
   {
     label: "Reports",
     icon: BarChart3,
     path: "/reports",
+    permission: "REPORT_VIEW",
   },
   {
     label: "Settings",
     icon: Settings,
     path: "/settings",
+    permission: "SETTINGS_VIEW",
   },
 ];
 

@@ -161,7 +161,7 @@ export const updateEmployeeSchema = Joi.object({
     .allow(null, ""),
 
   password: Joi.string()
-    .min(8)
+    .min(6)
     .max(100)
     .optional(),
 
