@@ -1,6 +1,5 @@
 import sql from "mssql";
-
-const MIN_CHECKOUT_HOURS = 4;
+import { ATTENDANCE_CONFIG } from "../config/attendance.config.js";
 
 const profilePhotoDataUrl = (photo) => {
   if (!photo) return null;
@@ -20,6 +19,12 @@ const profilePhotoDataUrl = (photo) => {
 };
 
 export const markAttendance = async (emp_id, qr_token) => {
+  const {
+  WORK_START_TIME,
+  GRACE_PERIOD_MINUTES,
+  MIN_CHECKOUT_HOURS,
+} = ATTENDANCE_CONFIG;
+
   // 1. Check employee
   const employeeResult = await sql.query`
     SELECT emp_id, is_active
@@ -73,32 +78,37 @@ export const markAttendance = async (emp_id, qr_token) => {
   // 4. First scan → Check In
   if (!attendance) {
     const result = await sql.query`
-      INSERT INTO ATT_Attendance (
-        emp_id,
-        att_date,
-        check_in,
-        status
-      )
-      OUTPUT
-        INSERTED.att_id,
-        INSERTED.emp_id,
-        INSERTED.att_date,
-        INSERTED.check_in,
-        INSERTED.check_out,
-        INSERTED.status,
-        INSERTED.created_at,
-        INSERTED.updated_at
-      VALUES (
-        ${emp_id},
-        CAST(GETDATE() AS DATE),
-        CAST(GETDATE() AS TIME),
-        CASE
-          WHEN CAST(GETDATE() AS TIME) > '09:00:00'
-          THEN 'Late'
-          ELSE 'Present'
-        END
-      )
-    `;
+  INSERT INTO ATT_Attendance (
+    emp_id,
+    att_date,
+    check_in,
+    status
+  )
+  OUTPUT
+    INSERTED.att_id,
+    INSERTED.emp_id,
+    INSERTED.att_date,
+    INSERTED.check_in,
+    INSERTED.check_out,
+    INSERTED.status,
+    INSERTED.created_at,
+    INSERTED.updated_at
+  VALUES (
+    ${emp_id},
+    CAST(GETDATE() AS DATE),
+    CAST(GETDATE() AS TIME),
+    CASE
+      WHEN CAST(GETDATE() AS TIME) >
+           DATEADD(
+             MINUTE,
+             ${GRACE_PERIOD_MINUTES},
+             CAST(${WORK_START_TIME} AS TIME)
+           )
+      THEN 'Late'
+      ELSE 'Present'
+    END
+  )
+`;
 
     return {
       action: "CHECK_IN",
@@ -212,6 +222,51 @@ export const getAllAttendance = async (date) => {
     ...record,
     profile_photo: profilePhotoDataUrl(record.profile_photo),
   }));
+};
+
+export const getSelfAttendance = async (emp_id) => {
+  const request = new sql.Request();
+  request.input("emp_id", sql.Int, emp_id);
+
+  const result = await request.query(`
+    SELECT TOP 5
+      a.att_id,
+      a.emp_id,
+      a.att_date,
+      CONVERT(varchar(8), a.check_in, 108) AS check_in,
+      CONVERT(varchar(8), a.check_out, 108) AS check_out,
+      a.status,
+      a.created_at,
+      a.updated_at
+    FROM ATT_Attendance a
+    WHERE a.emp_id = @emp_id
+    ORDER BY a.att_date DESC, a.check_in DESC;
+
+    SELECT
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS present_days,
+      SUM(CASE WHEN a.status = 'Late' THEN 1 ELSE 0 END) AS late_days,
+      SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) AS absent_days
+    FROM ATT_Attendance a
+    WHERE a.emp_id = @emp_id;
+  `);
+
+  const records = result.recordset;
+  const counts = result.recordsets[1][0] ?? {};
+  const today = records.find(
+    (record) =>
+      new Date(record.att_date).toISOString().slice(0, 10) ===
+      new Date().toISOString().slice(0, 10),
+  ) ?? null;
+
+  return {
+    today,
+    records,
+    stats: {
+      present_days: Number(counts.present_days ?? 0),
+      late_days: Number(counts.late_days ?? 0),
+      absent_days: Number(counts.absent_days ?? 0),
+    },
+  };
 };
 
 export const addManualAttendance = async ({

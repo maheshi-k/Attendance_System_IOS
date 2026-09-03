@@ -1,13 +1,14 @@
-import { markAttendance, getAllAttendance , getAttendanceByEmpID, addManualAttendance, getAttendanceByID, updateManualAttendance } from "../services/attendance.service.js";
+import { markAttendance, getAllAttendance, getSelfAttendance, getAttendanceByEmpID, addManualAttendance, getAttendanceByID, updateManualAttendance } from "../services/attendance.service.js";
 
 export const markAttendanceController = async (req, res) => {
   try {
-    const { emp_id, qr_token } = req.body;
+    const { qr_token } = req.body;
+    const emp_id = req.user.emp_id;
 
-    if (!emp_id || !qr_token) {
+    if (!qr_token) {
       return res.status(400).json({
         success: false,
-        message: "Employee ID and QR token are required",
+        message: "QR token is required",
       });
     }
 
@@ -93,6 +94,24 @@ export const getAttendanceController = async (req,res) => {
   }
 }
 
+export const getSelfAttendanceController = async (req, res) => {
+  try {
+    const attendance = await getSelfAttendance(req.user.emp_id);
+
+    return res.status(200).json({
+      success: true,
+      data: attendance,
+    });
+  } catch (error) {
+    console.error("Error retrieving attendance:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve your attendance",
+    });
+  }
+};
+
 export const addManualAttendanceController = async (req, res) => {
   try {
     const { emp_id, att_date, check_in, check_out, status } = req.body;
@@ -130,6 +149,13 @@ export const getAttendanceByEmpIDController = async (req, res) => {
   try {
     const { id } = req.params;
     const { date } = req.query;
+
+    if (!/^\d+$/.test(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID must be numeric",
+      });
+    }
 
     const attendance = await getAttendanceByEmpID(id, date);
 

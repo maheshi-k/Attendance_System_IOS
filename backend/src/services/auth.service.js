@@ -114,3 +114,27 @@ return {
     permissions,
   };
 };
+
+export const changeEmployeePassword = async (
+  emp_id,
+  currentPassword,
+  newPassword,
+) => {
+  const result = await sql.query`
+    SELECT password_hash
+    FROM EMP_Emp
+    WHERE emp_id = ${emp_id} AND is_active = 1
+  `;
+  const employee = result.recordset[0];
+
+  if (!employee || !(await bcrypt.compare(currentPassword, employee.password_hash))) {
+    throw new Error("CURRENT_PASSWORD_INVALID");
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await sql.query`
+    UPDATE EMP_Emp
+    SET password_hash = ${passwordHash}, updated_at = GETDATE()
+    WHERE emp_id = ${emp_id}
+  `;
+};

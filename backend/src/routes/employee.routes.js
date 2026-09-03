@@ -1,5 +1,5 @@
 import express from 'express';
-import { getEmployee,addEmployee,getEmployeeById, updateEmployee , updateEmployeeStatusByID , getEmployeeByStatusController, deleteEmployeeByID, getActiveEmployeeCountController } from '../controllers/employee.controller.js';
+import { getEmployee,addEmployee,getEmployeeById, updateEmployee, updateMyProfileController , updateEmployeeStatusByID , getEmployeeByStatusController, deleteEmployeeByID, getActiveEmployeeCountController, getMyProfileController } from '../controllers/employee.controller.js';
 import { createEmployeeSchema, updateEmployeeSchema } from '../validators/employee.validator.js';
 import { validate } from '../middlewares/error.middleware.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
@@ -8,6 +8,8 @@ import { requirePermission } from '../middlewares/permission.middleware.js';
 
 const router = express.Router();
 
+router.get("/myprofile",authenticateToken, requirePermission("EMPLOYEE_PROFILE_VIEW"), getMyProfileController);
+router.put("/myprofile", authenticateToken, requirePermission("EMPLOYEE_PROFILE_VIEW"), uploadProfilePhoto.single("profile_photo"), updateMyProfileController);
 router.get("/",authenticateToken, requirePermission("EMPLOYEE_VIEW"), getEmployee);
 router.post("/create",authenticateToken, requirePermission("EMPLOYEE_CREATE"), uploadProfilePhoto.single("profile_photo"), 
 	validate(createEmployeeSchema) , addEmployee);

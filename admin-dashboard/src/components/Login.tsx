@@ -11,6 +11,8 @@ type LoginProps = {
   onLoginSuccess: () => void;
 };
 
+const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
 function Login({ onLoginSuccess }: LoginProps) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -46,16 +48,18 @@ function Login({ onLoginSuccess }: LoginProps) {
         "attendance_permissions",
         JSON.stringify(authData.permissions ?? []),
       );
+      const sessionExpiry = Date.now() + INACTIVITY_TIMEOUT_MS;
+      localStorage.setItem("attendance_session_expiry", String(sessionExpiry));
       window.dispatchEvent(new Event("auth:change"));
 
       onLoginSuccess();
       toast.success("Login successful");
-      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
         error?.message ||
         "Invalid email or password";
+
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -144,14 +148,14 @@ function Login({ onLoginSuccess }: LoginProps) {
               </div>
             </div>
 
-            <div className="pt-1 text-left">
+            {/* <div className="pt-1 text-left">
               <button
                 type="button"
                 className="text-base font-medium text-[var(--text-secondary)] underline-offset-2 transition hover:text-[#5ea94a] hover:underline"
               >
                 Forgot Password?
               </button>
-            </div>
+            </div> */}
 
             <button
               type="submit"

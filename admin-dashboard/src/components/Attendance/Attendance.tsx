@@ -63,6 +63,37 @@ const toDateString = (date: Date) => {
 
 const getToday = () => toDateString(new Date());
 
+const getAttendanceDateKey = (value: string) => {
+  const trimmedValue = value.trim();
+  const isoDateKey = trimmedValue.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+
+  if (isoDateKey) {
+    return isoDateKey;
+  }
+
+  const slashDateMatch = trimmedValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+
+  if (slashDateMatch) {
+    const [, firstPart, secondPart, year] = slashDateMatch;
+    const month = Number(firstPart);
+    const day = Number(secondPart);
+
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  return trimmedValue;
+};
+
+const isDateInRange = (date: string, from: string, to: string) => {
+  const dateKey = getAttendanceDateKey(date);
+
+  return (
+    (!from || dateKey >= from) &&
+    (!to || dateKey <= to) &&
+    (!from || !to || from <= to)
+  );
+};
+
 const getExpectedEmployeeDays = (
   employees: EmployeeRecord[],
   from: string,
@@ -139,6 +170,8 @@ function Attendance() {
     const end = toDateString(today);
     let start = end;
 
+    setToDate(end);
+
     if (range === "Yesterday") {
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
@@ -148,10 +181,8 @@ function Attendance() {
       const weekStart = new Date(today);
       weekStart.setDate(today.getDate() - today.getDay());
       start = toDateString(weekStart);
-      setToDate(end);
     } else if (range === "This Month") {
       start = toDateString(new Date(today.getFullYear(), today.getMonth(), 1));
-      setToDate(end);
     } else if (range === "Custom") {
       setDateRange(range);
       setCurrentPage(1);
@@ -192,11 +223,10 @@ function Attendance() {
       records.filter((record) => {
         const text =
           `${record.first_name} ${record.last_name} ${record.emp_code}`.toLowerCase();
-        const date = record.att_date.slice(0, 10);
+        const date = getAttendanceDateKey(record.att_date);
         return (
           text.includes(search.toLowerCase()) &&
-          (!fromDate || date >= fromDate) &&
-          (!toDate || date <= toDate) &&
+          isDateInRange(date, fromDate, toDate) &&
           (status === "All Status" || record.status === status)
         );
       }),
@@ -206,9 +236,9 @@ function Attendance() {
   const summaryRecords = useMemo(
     () =>
       records.filter((record) => {
-        const date = record.att_date.slice(0, 10);
+        const date = getAttendanceDateKey(record.att_date);
 
-        return (!fromDate || date >= fromDate) && (!toDate || date <= toDate);
+        return isDateInRange(date, fromDate, toDate);
       }),
     [records, fromDate, toDate],
   );
@@ -219,7 +249,8 @@ function Attendance() {
   );
 
   const totalPages = Math.ceil(filteredRecords.length / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
+  const safeCurrentPage = totalPages ? Math.min(currentPage, totalPages) : 1;
+  const startIndex = (safeCurrentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, filteredRecords.length);
   const currentRecords = filteredRecords.slice(startIndex, endIndex);
   const exportData = filteredRecords.map((record) => ({
@@ -346,7 +377,7 @@ function Attendance() {
         }}
       />
       <EmployeePagination
-        currentPage={currentPage}
+        currentPage={safeCurrentPage}
         totalPages={totalPages}
         rowsPerPage={rowsPerPage}
         totalEmployees={filteredRecords.length}

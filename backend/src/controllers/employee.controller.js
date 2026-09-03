@@ -1,4 +1,4 @@
-import { getAllEmployees, createEmployee, getEmployeeByID, UpdateEmployeeByID ,updateEmployeeStatus, getEmployeeByStatus, deleteEmployee, getActiveEmployeeCount } from "../services/employee.service.js";
+import { getAllEmployees, createEmployee, getEmployeeByID, UpdateEmployeeByID ,updateEmployeeStatus, getEmployeeByStatus, deleteEmployee, getActiveEmployeeCount , getMyProfile, updateMyProfile } from "../services/employee.service.js";
 
 export const getEmployee = async (req, res) => {
     try{
@@ -155,6 +155,53 @@ export const updateEmployee = async (req, res) => {
   }
 };
 
+export const updateMyProfileController = async (req, res) => {
+  try {
+    const {
+      first_name,
+      last_name,
+      email_2,
+      mobile_no_1,
+      mobile_no_2,
+      address,
+      gender,
+      nic,
+    } = req.body;
+
+    if (!first_name || !last_name || !mobile_no_1 || !gender || !nic) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, primary phone, gender and NIC are required",
+      });
+    }
+
+    const employee = await updateMyProfile(req.user.emp_id, {
+      first_name,
+      last_name,
+      email_2,
+      mobile_no_1,
+      mobile_no_2,
+      address,
+      gender,
+      nic,
+      profile_photo: req.file?.buffer,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: employee,
+    });
+  } catch (error) {
+    console.error("Error updating own profile:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+    });
+  }
+};
+
 export const updateEmployeeStatusByID = async (req,res) => {
   try{
     const { id } = req.params;
@@ -263,4 +310,30 @@ export const getActiveEmployeeCountController = async (req, res) => {
   }
 };
 
+export const getMyProfileController = async (req, res) => {
+  try {
+    const emp_id = req.user.emp_id;
+
+    const employee = await getMyProfile(emp_id);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee profile not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: employee,
+    });
+  } catch (error) {
+    console.error("Get my profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load profile",
+    });
+  }
+};
 

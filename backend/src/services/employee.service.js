@@ -455,3 +455,114 @@ export const getActiveEmployeeCount = async () => {
 
   return result.recordset[0].active_count;
 };
+
+export const getMyProfile = async (emp_id) => {
+  const request = new sql.Request();
+
+  request.input("emp_id", sql.Int, emp_id);
+
+  try {
+    const result = await request.query(`
+      SELECT
+        e.emp_id,
+        e.emp_code,
+        e.first_name,
+        e.last_name,
+        e.email_1,
+        e.email_2,
+        e.mobile_no_1,
+        e.mobile_no_2,
+        e.address,
+        e.gender,
+        e.nic,
+        e.profile_photo,
+        e.joining_date,
+        e.employment_status,
+        e.designation,
+        e.role_id,
+        r.role_name
+      FROM EMP_Emp e
+      LEFT JOIN ROLE_Role r
+        ON e.role_id = r.role_id
+      WHERE e.emp_id = @emp_id
+    `);
+
+    const employee = result.recordset[0];
+
+    return employee
+      ? {
+          ...employee,
+          profile_photo: profilePhotoDataUrl(employee.profile_photo),
+        }
+      : null;
+  } catch (error) {
+    console.error("Get my profile service error:", error);
+    throw error;
+  }
+};
+
+export const updateMyProfile = async (emp_id, profileData) => {
+  const {
+    first_name,
+    last_name,
+    email_2,
+    mobile_no_1,
+    mobile_no_2,
+    address,
+    gender,
+    nic,
+    profile_photo,
+  } = profileData;
+  const request = new sql.Request();
+
+  request.input("emp_id", sql.Int, emp_id);
+  request.input("first_name", sql.VarChar(50), first_name);
+  request.input("last_name", sql.VarChar(50), last_name);
+  request.input("email_2", sql.VarChar(100), email_2 || null);
+  request.input("mobile_no_1", sql.VarChar(20), mobile_no_1);
+  request.input("mobile_no_2", sql.VarChar(20), mobile_no_2 || null);
+  request.input("address", sql.VarChar(255), address || null);
+  request.input("gender", sql.VarChar(20), gender);
+  request.input("nic", sql.VarChar(20), nic);
+  request.input("profile_photo", sql.VarBinary(sql.MAX), profile_photo || null);
+
+  const result = await request.query(`
+    UPDATE EMP_Emp
+    SET
+      first_name = @first_name,
+      last_name = @last_name,
+      email_2 = @email_2,
+      mobile_no_1 = @mobile_no_1,
+      mobile_no_2 = @mobile_no_2,
+      address = @address,
+      gender = @gender,
+      nic = @nic,
+      profile_photo = COALESCE(@profile_photo, profile_photo),
+      updated_at = GETDATE()
+    OUTPUT
+      INSERTED.emp_id,
+      INSERTED.emp_code,
+      INSERTED.first_name,
+      INSERTED.last_name,
+      INSERTED.email_1,
+      INSERTED.email_2,
+      INSERTED.mobile_no_1,
+      INSERTED.mobile_no_2,
+      INSERTED.address,
+      INSERTED.gender,
+      INSERTED.nic,
+      INSERTED.profile_photo,
+      INSERTED.joining_date,
+      INSERTED.employment_status,
+      INSERTED.designation,
+      INSERTED.role_id,
+      INSERTED.is_active,
+      INSERTED.created_at,
+      INSERTED.updated_at
+    WHERE emp_id = @emp_id
+  `);
+
+  const employee = result.recordset[0];
+
+  return employee ? getMyProfile(emp_id) : null;
+};
