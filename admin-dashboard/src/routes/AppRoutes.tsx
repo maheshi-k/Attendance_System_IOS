@@ -18,6 +18,9 @@ function AppRoutes() {
   const permissions = getStoredPermissions();
 
   const accessiblePaths = menuItems.flatMap((item) => {
+    if (item.disabled) {
+      return [];
+    }
     if (item.children) {
       return item.children
         .filter(

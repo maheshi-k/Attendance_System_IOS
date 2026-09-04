@@ -40,11 +40,18 @@ function LoginForm() {
       );
       window.dispatchEvent(new Event("auth:change"));
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "Unable to sign in",
-      );
+      if (submitError instanceof Error) {
+        if (
+          submitError.message.includes("email_1") ||
+          submitError.message.includes("password")
+        ) {
+          setError("Incorrect email or password.");
+        } else {
+          setError(submitError.message);
+        }
+      } else {
+        setError("Unable to sign in.");
+      }
     } finally {
       setIsSubmitting(false);
     }

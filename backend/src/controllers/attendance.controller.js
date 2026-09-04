@@ -1,4 +1,4 @@
-import { markAttendance, getAllAttendance, getSelfAttendance, getAttendanceByEmpID, addManualAttendance, getAttendanceByID, updateManualAttendance } from "../services/attendance.service.js";
+import { markAttendance, getAllAttendance, getSelfAttendance, getAttendanceByEmpID, addManualAttendance, getAttendanceByID, updateManualAttendance, getSelfAttendanceView } from "../services/attendance.service.js";
 
 export const markAttendanceController = async (req, res) => {
   try {
@@ -97,6 +97,24 @@ export const getAttendanceController = async (req,res) => {
 export const getSelfAttendanceController = async (req, res) => {
   try {
     const attendance = await getSelfAttendance(req.user.emp_id);
+
+    return res.status(200).json({
+      success: true,
+      data: attendance,
+    });
+  } catch (error) {
+    console.error("Error retrieving attendance:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve your attendance",
+    });
+  }
+};
+
+export const getSelfAttendanceViewController = async (req, res) => {
+  try {
+    const attendance = await getSelfAttendanceView(req.user.emp_id);
 
     return res.status(200).json({
       success: true,

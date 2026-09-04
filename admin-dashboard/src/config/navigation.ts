@@ -35,12 +35,13 @@ export const menuItems = [
     label: "Attendance",
     icon: QrCode,
     path: "/attendance",
-    permission: "ATTENDANCE_VIEW",
+    // permission: "ATTENDANCE_VIEW",
   },
   {
     label: "Leaves",
     icon: CalendarDays,
     expandable: true,
+    disabled: true,
     children: [
       {
         label: "Request Management",
@@ -65,12 +66,12 @@ export const menuItems = [
     path: "/employees",
     permission: "EMPLOYEE_VIEW",
   },
-  {
-    label: "Reports",
-    icon: BarChart3,
-    path: "/reports",
-    permission: "REPORT_VIEW",
-  },
+  // {
+  //   label: "Reports",
+  //   icon: BarChart3,
+  //   path: "/reports",
+  //   permission: "REPORT_VIEW",
+  // },
   {
     label: "Settings",
     icon: Settings,

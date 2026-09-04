@@ -24,6 +24,7 @@ function Sidebar() {
   const visibleMenuItems = useMemo(
     () =>
       menuItems.filter((item) => {
+        if (item.disabled) return false;
         if (!item.permission) return true;
         return userPermissions.includes(item.permission);
       }),

@@ -229,7 +229,7 @@ export const getSelfAttendance = async (emp_id) => {
   request.input("emp_id", sql.Int, emp_id);
 
   const result = await request.query(`
-    SELECT TOP 5
+    SELECT
       a.att_id,
       a.emp_id,
       a.att_date,
@@ -257,6 +257,72 @@ export const getSelfAttendance = async (emp_id) => {
   `);
 
   const records = result.recordset;
+  const counts = result.recordsets[1][0] ?? {};
+  const today = records.find(
+    (record) =>
+      new Date(record.att_date).toISOString().slice(0, 10) ===
+      new Date().toISOString().slice(0, 10),
+  ) ?? null;
+
+  return {
+    today,
+    records,
+    stats: {
+      present_days: Number(counts.present_days ?? 0),
+      late_days: Number(counts.late_days ?? 0),
+      absent_days: Number(counts.absent_days ?? 0),
+    },
+  };
+};
+
+export const getSelfAttendanceView = async (emp_id) => {
+  const request = new sql.Request();
+  request.input("emp_id", sql.Int, emp_id);
+
+  const result = await request.query(`
+    SELECT
+        a.att_id,
+        a.emp_id,
+        e.emp_code,
+        e.first_name,
+        e.last_name,
+        e.designation,
+        e.email_1 AS email,
+        e.profile_photo,
+        a.att_date,
+        CONVERT(varchar(8), a.check_in, 108) AS check_in,
+        CONVERT(varchar(8), a.check_out, 108) AS check_out,
+        a.status,
+        a.created_at,
+        a.updated_at
+      FROM ATT_Attendance a
+      INNER JOIN EMP_Emp e
+        ON a.emp_id = e.emp_id
+      WHERE a.emp_id = @emp_id
+      ORDER BY
+        a.att_date DESC,
+        a.check_in DESC
+
+    SELECT
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS present_days,
+      SUM(CASE WHEN a.status = 'Late' THEN 1 ELSE 0 END) AS late_days,
+      SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) AS absent_days
+    FROM ATT_Attendance a
+    WHERE a.emp_id = @emp_id
+      AND a.att_date >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
+      AND a.att_date < DATEADD(
+        MONTH,
+        1,
+        DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
+      );
+  `);
+
+  const records = result.recordset.map((record) => ({
+  ...record,
+  profile_photo: record.profile_photo
+    ? `data:image/jpeg;base64,${record.profile_photo.toString("base64")}`
+    : null,
+}));
   const counts = result.recordsets[1][0] ?? {};
   const today = records.find(
     (record) =>

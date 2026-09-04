@@ -6,6 +6,7 @@ type AttendanceTableProps = {
   records: AttendanceRecord[];
   loading: boolean;
   error: string;
+  canEdit: boolean;
   onEdit: (record: AttendanceRecord) => void;
 };
 
@@ -16,6 +17,7 @@ function AttendanceTable({
   records,
   loading,
   error,
+  canEdit,
   onEdit,
 }: AttendanceTableProps) {
   const [currentTime, setCurrentTime] = useState(() => new Date());
@@ -154,10 +156,13 @@ function AttendanceTable({
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
+                            disabled={!canEdit}
                             // aria-label={`Edit ${employee.first_name}`}
                             title="Edit"
                             onClick={() => onEdit(record)}
-                            className="rounded-lg p-2 text-[#625e58] transition hover:bg-[#f3f4f5]"
+                            className={`rounded-lg p-2 text-[#625e58] transition hover:bg-[#f3f4f5]${
+                              !canEdit ? " cursor-not-allowed opacity-50" : ""
+                            }`}
                           >
                             <Pencil size={15} />
                           </button>

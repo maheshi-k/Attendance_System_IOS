@@ -3,7 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import ExportData, { type ExportColumn } from "../common/ExportData";
 import EmployeePagination from "../Employee/EmployeePagination";
-import { getAttendance } from "../../services/attendance.service";
+import {
+  getAttendance,
+  getSelfAttendance,
+} from "../../services/attendance.service";
 import { getAllEmployees } from "../../services/employee.service";
 import type {
   AttendanceExportRow,
@@ -153,6 +156,21 @@ function Attendance() {
     return Math.max(0, checkInMinutes - officeStartMinutes);
   };
 
+  const employee = JSON.parse(
+    localStorage.getItem("attendance_employee") || "null",
+  );
+
+  const isAdmin = employee?.role_id === 1;
+
+  const userPermissions = JSON.parse(
+    localStorage.getItem("attendance_permissions") || "[]",
+  );
+
+  const canManageAttendance = userPermissions.some(
+    (permission: { permission_code?: string }) =>
+      permission.permission_code === "ATTENDANCE_MANAGE",
+  );
+
   const loadAttendance = () => {
     setLoading(true);
     getAttendance()
@@ -194,21 +212,64 @@ function Attendance() {
     setCurrentPage(1);
   };
 
+  // useEffect(() => {
+  //   const loadData = async () => {
+  //     try {
+  //       setLoading(true);
+
+  //       const [attendanceResponse, employeeResponse] = await Promise.all([
+  //         getAttendance(),
+  //         getAllEmployees(),
+  //       ]);
+
+  //       setRecords(attendanceResponse.data);
+  //       setActiveEmployees(employeeResponse.data);
+  //     } catch (loadError) {
+  //       console.error("Failed to load attendance data:", loadError);
+  //       setError("Failed to load attendance records");
+  //       toast.error("Failed to load attendance records");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   loadData();
+  // }, []);
+
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
+        setError("");
 
-        const [attendanceResponse, employeeResponse] = await Promise.all([
-          getAttendance(),
-          getAllEmployees(),
-        ]);
+        if (isAdmin) {
+          const attendanceResponse = await getAttendance();
 
-        setRecords(attendanceResponse.data);
-        setActiveEmployees(employeeResponse.data);
+          if (!Array.isArray(attendanceResponse.data)) {
+            throw new Error("Attendance data is not an array");
+          }
+
+          setRecords(attendanceResponse.data);
+
+          const employeeResponse = await getAllEmployees();
+          setActiveEmployees(employeeResponse.data);
+        } else {
+          const attendanceResponse = await getSelfAttendance();
+
+          if (!Array.isArray(attendanceResponse.data.records)) {
+            throw new Error("Attendance records is not an array");
+          }
+
+          setRecords(attendanceResponse.data.records);
+          setActiveEmployees([]);
+        }
       } catch (loadError) {
         console.error("Failed to load attendance data:", loadError);
+
+        setRecords([]);
+        setActiveEmployees([]);
         setError("Failed to load attendance records");
+
         toast.error("Failed to load attendance records");
       } finally {
         setLoading(false);
@@ -216,7 +277,7 @@ function Attendance() {
     };
 
     loadData();
-  }, []);
+  }, [isAdmin]);
 
   const filteredRecords = useMemo(
     () =>
@@ -313,34 +374,36 @@ function Attendance() {
             Daily Attendance Log
           </h1>
         </div>
-        <div className="flex gap-3">
-          <ExportData
-            data={exportData}
-            columns={attendanceExportColumns}
-            fileName="attendance"
-            sheetName="Attendance"
-            label="Export Excel"
-          />
-          <button
-            type="button"
-            onClick={() => toast.info("PDF export is not available yet")}
-            className="flex items-center gap-2 rounded-xl border border-[var(--border-muted)] bg-white px-5 py-2.5 text-sm font-semibold text-[var(--text-primary-dark)]"
-          >
-            <FileText size={15} />
-            Export PDF
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAttendanceFormRecord(null);
-              setIsAttendanceFormOpen(true);
-            }}
-            className="flex items-center gap-2 rounded-xl bg-[#7fb249] px-5 py-2.5 text-sm font-bold text-[#234100] transition hover:bg-[#72a13f]"
-          >
-            <UserPlus size={15} />
-            Add Attendance
-          </button>
-        </div>
+        {canManageAttendance && (
+          <div className="flex gap-3">
+            <ExportData
+              data={exportData}
+              columns={attendanceExportColumns}
+              fileName="attendance"
+              sheetName="Attendance"
+              label="Export Excel"
+            />
+            <button
+              type="button"
+              onClick={() => toast.info("PDF export is not available yet")}
+              className="flex items-center gap-2 rounded-xl border border-[var(--border-muted)] bg-white px-5 py-2.5 text-sm font-semibold text-[var(--text-primary-dark)]"
+            >
+              <FileText size={15} />
+              Export PDF
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAttendanceFormRecord(null);
+                setIsAttendanceFormOpen(true);
+              }}
+              className="flex items-center gap-2 rounded-xl bg-[#7fb249] px-5 py-2.5 text-sm font-bold text-[#234100] transition hover:bg-[#72a13f]"
+            >
+              <UserPlus size={15} />
+              Add Attendance
+            </button>
+          </div>
+        )}
       </div>
       <AttendanceFilters
         search={search}
@@ -371,6 +434,7 @@ function Attendance() {
         records={currentRecords}
         loading={loading}
         error={error}
+        canEdit={canManageAttendance}
         onEdit={(record) => {
           setAttendanceFormRecord(record);
           setIsAttendanceFormOpen(true);
