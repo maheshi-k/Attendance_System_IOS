@@ -19,7 +19,7 @@ function StatCards({
 
   const cards = [
     {
-      label: "Present Today",
+      label: "On Time Today",
       value: value(presentCount),
       note: "Updated just now",
       icon: CheckCircle2,

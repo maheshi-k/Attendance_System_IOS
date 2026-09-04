@@ -1,5 +1,5 @@
 const stats = [
-  { key: "present_days", label: "Present Days", active: true },
+  { key: "present_days", label: "On Time Days", active: true },
   { key: "late_days", label: "Late Days", active: false },
   { key: "absent_days", label: "Absent Days", active: false },
 ] as const;
