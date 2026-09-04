@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import {
-  // checkAttendance,
+  checkAttendance,
   getSelfAttendance,
 } from "../../services/attendance.service";
 import { AttendanceSuccessPopup } from "../common/AttendanceSuccessPopup";
@@ -125,7 +125,7 @@ function QrScannerModal({
           return;
         }
 
-        // const attendance = await checkAttendance(qrToken.trim());
+        await checkAttendance(qrToken.trim());
 
         if (currentSession !== scannerSessionRef.current) {
           return;

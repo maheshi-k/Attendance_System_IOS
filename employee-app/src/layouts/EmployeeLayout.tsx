@@ -60,6 +60,7 @@ function EmployeeLayout({ onLogout }: EmployeeLayoutProps) {
       <HomeHeader
         employeeName={employeeName}
         profilePhoto={employee?.profile_photo}
+        employeeRole={employee?.role_name}
         onLogout={onLogout}
       />
 

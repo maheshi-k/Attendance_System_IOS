@@ -35,16 +35,32 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getMyProfile()
-      .then((data) => {
-        setEmployee(data);
-      })
-      .catch((error) => {
-        console.error("Failed to load employee profile:", error);
-      })
-      .finally(() => {
+    const loadProfile = () => {
+      if (!localStorage.getItem("attendance_token")) {
+        setEmployee(null);
         setLoading(false);
-      });
+        return;
+      }
+
+      setLoading(true);
+      getMyProfile()
+        .then((data) => {
+          setEmployee(data);
+        })
+        .catch((error) => {
+          console.error("Failed to load employee profile:", error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    };
+
+    loadProfile();
+    window.addEventListener("auth:change", loadProfile);
+
+    return () => {
+      window.removeEventListener("auth:change", loadProfile);
+    };
   }, []);
 
   return (

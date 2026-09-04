@@ -166,7 +166,7 @@ function ProfilePage() {
           <div className="mb-4 flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-[#3c6a00]" />
             <h2 className="text-[16px] font-semibold text-[#191c1d]">
-              Personal Details
+              Conatct Details
             </h2>
           </div>
 
@@ -237,7 +237,6 @@ function ProfilePage() {
 
             <div className="rounded-[12px] bg-[#f8f9fa] p-3">
               <div className="flex items-center gap-2 text-[#625e58]">
-                <Briefcase className="h-4 w-4 text-[#3c6a00]" />
                 <p className="text-[11px] uppercase tracking-[0.5px]">
                   Address
                 </p>
@@ -249,7 +248,6 @@ function ProfilePage() {
 
             <div className="rounded-[12px] bg-[#f8f9fa] p-3">
               <div className="flex items-center gap-2 text-[#625e58]">
-                <Briefcase className="h-4 w-4 text-[#3c6a00]" />
                 <p className="text-[11px] uppercase tracking-[0.5px]">Gender</p>
               </div>
               <p className="mt-2 text-[15px] font-medium text-[#191c1d]">
@@ -259,7 +257,6 @@ function ProfilePage() {
 
             <div className="rounded-[12px] bg-[#f8f9fa] p-3">
               <div className="flex items-center gap-2 text-[#625e58]">
-                <Briefcase className="h-4 w-4 text-[#3c6a00]" />
                 <p className="text-[11px] uppercase tracking-[0.5px]">
                   NIC Number
                 </p>
@@ -282,7 +279,6 @@ function ProfilePage() {
           <div className="space-y-3">
             <div className="rounded-[12px] bg-[#f8f9fa] p-3">
               <div className="flex items-center gap-2 text-[#625e58]">
-                <CalendarDays className="h-4 w-4 text-[#3c6a00]" />
                 <p className="text-[11px] uppercase tracking-[0.5px]">
                   Current Employment
                 </p>
@@ -293,7 +289,6 @@ function ProfilePage() {
             </div>
             <div className="rounded-[12px] bg-[#f8f9fa] p-3">
               <div className="flex items-center gap-2 text-[#625e58]">
-                <CalendarDays className="h-4 w-4 text-[#3c6a00]" />
                 <p className="text-[11px] uppercase tracking-[0.5px]">
                   Current Status
                 </p>
@@ -304,7 +299,6 @@ function ProfilePage() {
             </div>
             <div className="rounded-[12px] bg-[#f8f9fa] p-3">
               <div className="flex items-center gap-2 text-[#625e58]">
-                <CalendarDays className="h-4 w-4 text-[#3c6a00]" />
                 <p className="text-[11px] uppercase tracking-[0.5px]">
                   Joining Date
                 </p>

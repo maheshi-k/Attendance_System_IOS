@@ -26,6 +26,7 @@ const items = [
     label: "Leave",
     icon: LeaveIcon,
     path: "/leave",
+    disabled: true,
   },
   {
     label: "Profile",
@@ -62,7 +63,10 @@ function BottomNavigation({ onScanQR }: BottomNavigationProps) {
           <button
             key={item.label}
             type="button"
+            disabled={item.disabled}
             onClick={() => {
+              if (item.disabled) return;
+
               if (item.label === "Scan QR") {
                 onScanQR();
                 return;
@@ -73,7 +77,11 @@ function BottomNavigation({ onScanQR }: BottomNavigationProps) {
               }
             }}
             className={`flex min-h-12 flex-col items-center justify-center text-[10px] font-medium ${
-              isActive ? "text-white" : "text-[#222222]"
+              item.disabled
+                ? "cursor-not-allowed opacity-40"
+                : isActive
+                  ? "text-white"
+                  : "text-[#222222]"
             }`}
           >
             <div

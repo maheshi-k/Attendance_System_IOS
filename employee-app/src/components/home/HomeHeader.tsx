@@ -4,15 +4,21 @@ import logoAsset from "../../assets/logo.png";
 import avatarAsset from "../../assets/avatar.png";
 import { Eye, EyeOff, KeyRound, LogOut, Settings, X } from "lucide-react";
 import { changePassword } from "../../services/auth.service";
-import notificationAsset from "../../assets/notificationAsset.svg";
+// import notificationAsset from "../../assets/notificationAsset.svg";
 
 type HomeHeaderProps = {
   employeeName?: string;
   profilePhoto?: string | null;
+  employeeRole?: string | null;
   onLogout: () => void;
 };
 
-function HomeHeader({ employeeName, profilePhoto, onLogout }: HomeHeaderProps) {
+function HomeHeader({
+  employeeName,
+  profilePhoto,
+  employeeRole,
+  onLogout,
+}: HomeHeaderProps) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isPasswordDrawerOpen, setIsPasswordDrawerOpen] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false);
@@ -88,7 +94,7 @@ function HomeHeader({ employeeName, profilePhoto, onLogout }: HomeHeaderProps) {
         className="h-14 w-14 object-contain"
       />
       <div className="flex items-center gap-5">
-        <button
+        {/* <button
           type="button"
           aria-label="Notifications"
           className="relative flex h-8 w-8 items-center justify-center"
@@ -99,7 +105,7 @@ function HomeHeader({ employeeName, profilePhoto, onLogout }: HomeHeaderProps) {
             className="h-5 w-5 object-contain"
           />
           <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#3c6a00]" />
-        </button>
+        </button> */}
         <div className="relative">
           <button
             type="button"
@@ -130,7 +136,7 @@ function HomeHeader({ employeeName, profilePhoto, onLogout }: HomeHeaderProps) {
                     {employeeName}
                   </p>
 
-                  <p className="text-xs text-[#625e58]">Employee</p>
+                  <p className="text-xs text-[#625e58]">{employeeRole}</p>
                 </div>
               )}
 
