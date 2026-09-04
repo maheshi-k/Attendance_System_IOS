@@ -247,7 +247,13 @@ export const getSelfAttendance = async (emp_id) => {
       SUM(CASE WHEN a.status = 'Late' THEN 1 ELSE 0 END) AS late_days,
       SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) AS absent_days
     FROM ATT_Attendance a
-    WHERE a.emp_id = @emp_id;
+    WHERE a.emp_id = @emp_id
+      AND a.att_date >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
+      AND a.att_date < DATEADD(
+        MONTH,
+        1,
+        DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)
+      );
   `);
 
   const records = result.recordset;

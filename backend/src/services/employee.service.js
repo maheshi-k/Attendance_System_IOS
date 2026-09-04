@@ -68,6 +68,7 @@ export const createEmployee = async (employeeData) => {
     gender,
     address,
     role_id,
+    supervisor_id,
     profile_photo,
     employment_status,
     mobile_no_1,
@@ -82,8 +83,7 @@ export const createEmployee = async (employeeData) => {
   // Hash password
   const passwordHash = await bcrypt.hash(password, 10);
 
-  // Create a request so we can explicitly define
-  // profile_photo as VARBINARY(MAX)
+
   const request = new sql.Request();
 
   request.input("emp_code", sql.VarChar(20), emp_code);
@@ -96,6 +96,7 @@ export const createEmployee = async (employeeData) => {
   request.input("gender", sql.VarChar(20), gender);
   request.input("address", sql.VarChar(255), address || null);
   request.input("role_id", sql.Int, role_id);
+  request.input("supervisor_id",sql.Int,supervisor_id || null);
 
   // IMPORTANT: Store actual image bytes
   request.input(
@@ -128,6 +129,7 @@ export const createEmployee = async (employeeData) => {
       gender,
       address,
       role_id,
+      supervisor_id,
       profile_photo,
       employment_status,
       mobile_no_1,
@@ -146,6 +148,7 @@ export const createEmployee = async (employeeData) => {
       INSERTED.gender,
       INSERTED.address,
       INSERTED.role_id,
+      INSERTED.supervisor_id,
       INSERTED.profile_photo,
       INSERTED.employment_status,
       INSERTED.mobile_no_1,
@@ -166,6 +169,7 @@ export const createEmployee = async (employeeData) => {
       @gender,
       @address,
       @role_id,
+      @supervisor_id,
       @profile_photo,
       @employment_status,
       @mobile_no_1,
@@ -228,6 +232,7 @@ export const UpdateEmployeeByID = async (emp_id, employeeData) => {
     email_2,
     password,
     role_id,
+    supervisor_id,
     profile_photo,
     employment_status,
     mobile_no_1,
@@ -252,6 +257,7 @@ export const UpdateEmployeeByID = async (emp_id, employeeData) => {
   request.input("email_2", sql.VarChar(100), email_2 || null);
   request.input("password_hash", sql.VarChar(255), passwordHash);
   request.input("role_id", sql.Int, role_id);
+  request.input("supervisor_id", sql.Int, supervisor_id || null);
   request.input("profile_photo", sql.VarBinary(sql.MAX), profile_photo || null);
   request.input("employment_status", sql.VarChar(30), employment_status);
   request.input("mobile_no_1", sql.VarChar(20), mobile_no_1);
@@ -271,6 +277,7 @@ export const UpdateEmployeeByID = async (emp_id, employeeData) => {
       email_2 = @email_2,
       password_hash = COALESCE(@password_hash, password_hash),
       role_id = @role_id,
+      supervisor_id = @supervisor_id,
       profile_photo = COALESCE(@profile_photo, profile_photo),
       employment_status = @employment_status,
       mobile_no_1 = @mobile_no_1,
@@ -289,6 +296,7 @@ export const UpdateEmployeeByID = async (emp_id, employeeData) => {
       INSERTED.email_1,
       INSERTED.email_2,
       INSERTED.role_id,
+      INSERTED.supervisor_id,
       INSERTED.profile_photo,
       INSERTED.employment_status,
       INSERTED.mobile_no_1,
@@ -454,6 +462,26 @@ export const getActiveEmployeeCount = async () => {
   `);
 
   return result.recordset[0].active_count;
+};
+
+export const getAllSupervisors = async () => {
+  const result = await sql.query(`
+    SELECT
+    e.emp_id,
+    e.emp_code,
+    e.first_name,
+    e.last_name,
+    e.designation
+FROM EMP_Emp e
+INNER JOIN ROLE_Role r
+    ON e.role_id = r.role_id
+WHERE
+    r.role_name = 'Supervisor'
+    AND e.is_active = 1
+ORDER BY e.first_name, e.last_name;
+  `);
+
+  return result.recordset;
 };
 
 export const getMyProfile = async (emp_id) => {

@@ -1,4 +1,4 @@
-import { getAllEmployees, createEmployee, getEmployeeByID, UpdateEmployeeByID ,updateEmployeeStatus, getEmployeeByStatus, deleteEmployee, getActiveEmployeeCount , getMyProfile, updateMyProfile } from "../services/employee.service.js";
+import { getAllEmployees, createEmployee, getEmployeeByID, UpdateEmployeeByID ,updateEmployeeStatus, getEmployeeByStatus, deleteEmployee, getActiveEmployeeCount , getMyProfile, updateMyProfile , getAllSupervisors} from "../services/employee.service.js";
 
 export const getEmployee = async (req, res) => {
     try{
@@ -27,6 +27,7 @@ export const addEmployee = async (req, res) => {
       ...req.body,
       profile_photo: req.file?.buffer || null,
       designation_history: designationHistory,
+        supervisor_id: req.body.supervisor_id || null,
     };
 
     const employee = await createEmployee(employeeData);
@@ -90,6 +91,7 @@ export const updateEmployee = async (req, res) => {
       gender,
       address,
       role_id,
+      supervisor_id,
       employment_status,
       mobile_no_1,
       mobile_no_2,
@@ -122,6 +124,7 @@ export const updateEmployee = async (req, res) => {
       gender,
       address,
       role_id,
+      supervisor_id,
       profile_photo: req.file?.buffer,
       employment_status,
       mobile_no_1,
@@ -306,6 +309,24 @@ export const getActiveEmployeeCountController = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to get active employee count",
+    });
+  }
+};
+
+export const getAllSupervisorsController = async (req, res) => {
+  try {
+    const supervisors = await getAllSupervisors();
+
+    res.status(200).json({
+      success: true,
+      supervisors,
+    });
+  } catch (error) {
+    console.error("Failed to get supervisor details:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to get supervisor details",
     });
   }
 };

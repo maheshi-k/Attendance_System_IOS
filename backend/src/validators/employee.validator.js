@@ -68,6 +68,12 @@ export const createEmployeeSchema = Joi.object({
     .positive()
     .required(),
 
+  supervisor_id: Joi.number()
+    .integer()
+    .positive()
+    .allow(null, "")
+    .optional(),
+
   employment_status: Joi.string()
     .valid("Active", "On Leave", "Probation")
     .required(),
@@ -190,6 +196,12 @@ export const updateEmployeeSchema = Joi.object({
     .integer()
     .positive()
     .required(),
+
+  supervisor_id: Joi.number()
+    .integer()
+    .positive()
+    .allow(null, "")
+    .optional(),
 
   profile_photo: Joi.string()
     .trim()

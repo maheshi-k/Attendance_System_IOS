@@ -26,7 +26,7 @@ function AttendanceTable({
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border-muted)] bg-white">
+    <div className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-[var(--border-muted)] bg-white">
       <div className="overflow-x-auto">
         <table className="min-w-[900px] w-full table-fixed border-collapse">
           <thead className="bg-[#f1f7ea] text-left text-[10px] font-bold uppercase tracking-[0.7px] text-[#416900]">

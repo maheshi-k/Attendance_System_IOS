@@ -12,6 +12,7 @@ export type EmployeeRecord = {
   role_id: number;
   role_name: string;
   role_description?: string;
+  supervisor_id?: number | null;
 
   mobile_no_1: string;
   mobile_no_2?: string | null;
@@ -43,6 +44,7 @@ export type CreateEmployeeRequest = {
   gender: string;
   address?: string;
   role_id: number;
+  supervisor_id?: number | null;
   profile_photo?: string | null;
   employment_status: EmployeeStatus;
   mobile_no_1: string;

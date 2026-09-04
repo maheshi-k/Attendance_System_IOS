@@ -13,7 +13,7 @@ export const getAttendance = async (
   const response = await api.get("/attendance/view", {
     params: date ? { date } : undefined,
   });
-
+  console.log("Attendance response:", response.data);
   return response.data;
 };
 

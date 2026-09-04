@@ -13,11 +13,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   createEmployee,
+  getAllSupervisors,
   getEmployeeById,
   getEmployeeDesignationHistory,
   updateEmployee,
 } from "../../services/employee.service";
 import type { EmployeeRecord, DesignationHistory } from "../../types/employee";
+import type { Supervisor } from "../../services/employee.service";
 
 type DesignationRow = {
   id: number;
@@ -40,6 +42,9 @@ function AddEmployee() {
   const [employeeCode, setEmployeeCode] = useState("");
   const [password, setPassword] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
+  const [selectedRole, setSelectedRole] = useState(isEditing ? "" : "1");
+  const [selectedSupervisor, setSelectedSupervisor] = useState("");
 
   useEffect(() => {
     if (!profilePhoto) {
@@ -64,6 +69,10 @@ function AddEmployee() {
           getEmployeeById(Number(id)),
           getEmployeeDesignationHistory(Number(id)),
         ]);
+        setSelectedRole(String(employeeResponse.data.role_id));
+        setSelectedSupervisor(
+          String(employeeResponse.data.supervisor_id ?? ""),
+        );
         setEmployee(employeeResponse.data);
         setEmployeeCode(employeeResponse.data.emp_code);
         setDesignationRows(
@@ -96,6 +105,15 @@ function AddEmployee() {
     loadEmployee();
   }, [id, navigate]);
 
+  useEffect(() => {
+    getAllSupervisors()
+      .then((response) => setSupervisors(response.supervisors))
+      .catch((error) => {
+        console.error("Failed to load supervisors:", error);
+        toast.error("Failed to load supervisors");
+      });
+  }, []);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -114,6 +132,11 @@ function AddEmployee() {
     employeeData.append("gender", form.get("gender") as string);
     employeeData.append("address", form.get("address") as string);
     employeeData.append("role_id", form.get("role") as string);
+    if (selectedRole === "1" && selectedSupervisor) {
+      employeeData.append("supervisor_id", selectedSupervisor);
+    } else {
+      employeeData.append("supervisor_id", "");
+    }
     employeeData.append(
       "employment_status",
       form.get("employmentStatus") as string,
@@ -305,14 +328,44 @@ function AddEmployee() {
                 <select
                   required
                   name="role"
-                  defaultValue={String(employee?.role_id ?? 1)}
+                  value={selectedRole}
+                  onChange={(event) => {
+                    setSelectedRole(event.target.value);
+                    if (event.target.value !== "1") {
+                      setSelectedSupervisor("");
+                    }
+                  }}
                   className="mt-1.5 h-10 w-full rounded-lg bg-[var(--surface-input)] px-3 text-sm text-[var(--text-primary-dark)] outline-none focus:ring-2 focus:ring-[var(--secondary-focus)]"
                 >
-                  <option value="1">Employee</option>
-                  <option value="2">Admin</option>
-                  <option value="3">Supervisor</option>
+                  <option value="1">Admin</option>
+                  <option value="2">Supervisor</option>
+                  <option value="3">Employee</option>
                 </select>
               </label>
+              {selectedRole === "1" && (
+                <label className="text-sm font-medium text-[var(--text-primary-light)]">
+                  Supervisor
+                  <select
+                    required
+                    name="supervisor"
+                    value={selectedSupervisor}
+                    onChange={(event) =>
+                      setSelectedSupervisor(event.target.value)
+                    }
+                    className="mt-1.5 h-10 w-full rounded-lg bg-[var(--surface-input)] px-3 text-sm text-[var(--text-primary-dark)] outline-none focus:ring-2 focus:ring-[var(--secondary-focus)]"
+                  >
+                    <option value="" disabled>
+                      Select supervisor
+                    </option>
+                    {supervisors.map((supervisor) => (
+                      <option key={supervisor.emp_id} value={supervisor.emp_id}>
+                        {supervisor.first_name} {supervisor.last_name} (
+                        {supervisor.emp_code})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="text-sm font-medium text-[var(--text-primary-light)]">
                 Address
                 <input

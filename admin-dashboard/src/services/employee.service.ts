@@ -5,6 +5,11 @@ import type {
   DesignationHistory,
 } from "../types/employee";
 
+export type Supervisor = Pick<
+  EmployeeRecord,
+  "emp_id" | "emp_code" | "first_name" | "last_name" | "designation"
+>;
+
 export const getAllEmployees = async (): Promise<{
   success: boolean;
   data: EmployeeRecord[];
@@ -28,6 +33,14 @@ export const getEmployeeById = async (
   data: EmployeeRecord;
 }> => {
   const response = await api.get(`/employees/${empId}`);
+  return response.data;
+};
+
+export const getAllSupervisors = async (): Promise<{
+  success: boolean;
+  supervisors: Supervisor[];
+}> => {
+  const response = await api.get("/employees/supervisors");
   return response.data;
 };
 
