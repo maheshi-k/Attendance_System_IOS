@@ -73,6 +73,7 @@ function Login({ onLoginSuccess }: LoginProps) {
           <div className="flex flex-col items-center">
             <img
               src={Logo}
+              onClick={() => navigate("/login")}
               alt="Logo"
               className="h-[70px] w-[70px] rounded-md object-contain"
             />

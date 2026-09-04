@@ -2,7 +2,7 @@ import {
   LayoutDashboard,
   CalendarDays,
   Users,
-  BarChart3,
+  // BarChart3,
   Settings,
   QrCode,
   LogOut,

@@ -1,6 +1,6 @@
 import {
-  Briefcase,
-  CalendarDays,
+  // Briefcase,
+  // CalendarDays,
   Camera,
   Edit3,
   Mail,
