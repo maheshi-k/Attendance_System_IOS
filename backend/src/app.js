@@ -15,6 +15,12 @@ app.use(cors({
     origin: "*",
     credentials: true,
 }));
+// app.use(
+//   cors({
+//     origin: "http://attendance-api.ionesoftsolutions.com/",
+//     credentials: true,
+//   })
+// );
 app.use(express.json());
 
 app.get("/", (req,res) => {

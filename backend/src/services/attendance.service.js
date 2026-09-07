@@ -18,12 +18,15 @@ const profilePhotoDataUrl = (photo) => {
   return `data:${mimeType};base64,${buffer.toString("base64")}`;
 };
 
-export const markAttendance = async (emp_id, qr_token) => {
+export const markAttendance = async (emp_id, qr_token, client_date, client_time) => {
   const {
   WORK_START_TIME,
   GRACE_PERIOD_MINUTES,
   MIN_CHECKOUT_HOURS,
 } = ATTENDANCE_CONFIG;
+
+console.log("Attendance date:", client_date);
+console.log("Attendance time:", client_time);
 
   // 1. Check employee
   const employeeResult = await sql.query`
@@ -70,7 +73,7 @@ export const markAttendance = async (emp_id, qr_token) => {
       status
     FROM ATT_Attendance
     WHERE emp_id = ${emp_id}
-      AND att_date = CAST(GETDATE() AS DATE)
+      AND att_date = ${client_date}
   `;
 
   const attendance = todayResult.recordset[0];
@@ -95,10 +98,10 @@ export const markAttendance = async (emp_id, qr_token) => {
     INSERTED.updated_at
   VALUES (
     ${emp_id},
-    CAST(GETDATE() AS DATE),
-    CAST(GETDATE() AS TIME),
+    ${client_date},
+    ${client_time},
     CASE
-      WHEN CAST(GETDATE() AS TIME) >
+      WHEN CAST(${client_time} AS TIME) >
            DATEADD(
              MINUTE,
              ${GRACE_PERIOD_MINUTES},
@@ -126,7 +129,7 @@ const timeResult = await sql.query`
   SELECT DATEDIFF(
     MINUTE,
     check_in,
-    CAST(GETDATE() AS TIME)
+    CAST(${client_time} AS TIME)
   ) AS minutes_elapsed
   FROM ATT_Attendance
   WHERE att_id = ${attendance.att_id}
@@ -140,11 +143,11 @@ if (minutesElapsed < MIN_CHECKOUT_HOURS * 60) {
   throw new Error("MIN_CHECKOUT_TIME");
 }
 
-  // 7. Second valid scan → Check Out
+  // Second valid scan → Check Out
   const result = await sql.query`
     UPDATE ATT_Attendance
     SET
-      check_out = CAST(GETDATE() AS TIME),
+      check_out = ${client_time},
       updated_at = GETDATE()
     OUTPUT
       INSERTED.att_id,

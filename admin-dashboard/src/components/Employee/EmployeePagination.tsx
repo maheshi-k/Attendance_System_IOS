@@ -52,7 +52,7 @@ function EmployeePagination({
   };
 
   return (
-    <div className="flex items-center justify-between border-t border-[rgba(194,201,181,0.2)] bg-[#f3f4f5] px-6 py-4">
+    <div className="flex items-center justify-between border-t border-[rgba(194,201,181,0.2)] bg-[#f3f4f5] px-6 py-4 flex-col md:flex-row">
       {/* Rows per page */}
       <div className="flex items-center gap-2 text-sm text-[#625e58]">
         <span>Rows per page:</span>

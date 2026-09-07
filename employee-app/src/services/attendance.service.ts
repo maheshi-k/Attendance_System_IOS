@@ -26,6 +26,20 @@ export const getSelfAttendance = async (): Promise<SelfAttendance> => {
 };
 
 export const checkAttendance = async (qr_token: string) => {
+  const now = new Date();
+
+  const client_date = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const client_time = [
+    String(now.getHours()).padStart(2, "0"),
+    String(now.getMinutes()).padStart(2, "0"),
+    String(now.getSeconds()).padStart(2, "0"),
+  ].join(":");
+
   const response = await fetch(
     `${import.meta.env.VITE_BASE_URL ?? "/api"}/attendance/check`,
     {
@@ -34,7 +48,11 @@ export const checkAttendance = async (qr_token: string) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("attendance_token") ?? ""}`,
       },
-      body: JSON.stringify({ qr_token }),
+      body: JSON.stringify({
+        qr_token,
+        client_date,
+        client_time,
+      }),
     },
   );
 

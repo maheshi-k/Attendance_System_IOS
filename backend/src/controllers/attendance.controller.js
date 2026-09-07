@@ -2,7 +2,7 @@ import { markAttendance, getAllAttendance, getSelfAttendance, getAttendanceByEmp
 
 export const markAttendanceController = async (req, res) => {
   try {
-    const { qr_token } = req.body;
+    const { qr_token, client_date ,client_time } = req.body;
     const emp_id = req.user.emp_id;
 
     if (!qr_token) {
@@ -12,7 +12,14 @@ export const markAttendanceController = async (req, res) => {
       });
     }
 
-    const result = await markAttendance(emp_id, qr_token);
+    if (!client_date || !client_time) {
+    return res.status(400).json({
+      success: false,
+      message: "Client date and time are required",
+    });
+}
+
+    const result = await markAttendance(emp_id, qr_token,client_date, client_time);
 
     const message =
       result.action === "CHECK_IN"

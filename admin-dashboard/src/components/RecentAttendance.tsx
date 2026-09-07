@@ -29,7 +29,7 @@ function RecentAttendance({ records, loading }: RecentAttendanceProps) {
             Live monitoring of employee check-ins/outs
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-start gap-2 md:flex-row md:items-center">
           <label className="relative">
             <SlidersHorizontal
               size={15}

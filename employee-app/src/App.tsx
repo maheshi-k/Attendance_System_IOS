@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { ToastContainer } from "react-toastify/unstyled";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import LoginPage from "./components/auth/LoginPage";
@@ -39,14 +39,6 @@ function App() {
 
   return (
     <>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        closeOnClick
-        pauseOnHover
-      />
-
       {isAuthenticated ? (
         <Routes>
           <Route element={<EmployeeLayout onLogout={handleLogout} />}>
@@ -60,6 +52,7 @@ function App() {
       ) : (
         <LoginPage />
       )}
+      <ToastContainer position="bottom-right" autoClose={3000} />
     </>
   );
 }

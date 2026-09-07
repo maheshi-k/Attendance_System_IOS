@@ -59,8 +59,8 @@ function EmployeeFilters({
   onDesignationChange,
 }: EmployeeFiltersProps) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-[rgba(194,201,181,0.3)] bg-white p-[17px]">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between rounded-2xl border border-[rgba(194,201,181,0.3)] bg-white p-[17px] flex-col gap-2 md:flex-row md:gap-0">
+      <div className="flex items-start gap-3 flex-col md:flex-row md:items-center ">
         <FilterSelect
           label="Filter employees by status"
           value={selectedStatus}

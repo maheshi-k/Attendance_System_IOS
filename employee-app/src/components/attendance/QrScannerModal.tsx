@@ -235,10 +235,15 @@ function QrScannerModal({
     } catch (error) {
       console.error("Camera error:", error);
 
+      // if (session === scannerSessionRef.current) {
+      //   setCameraError(
+      //     "Unable to access the camera. Please allow camera permission and try again.",
+      //   );
+      // }
       if (session === scannerSessionRef.current) {
-        setCameraError(
-          "Unable to access the camera. Please allow camera permission and try again.",
-        );
+        const message = error instanceof Error ? error.message : String(error);
+
+        setCameraError(`Camera error: ${message}`);
       }
     }
   }, [handleScan, stopScanner, isOpen]);

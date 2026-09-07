@@ -376,7 +376,7 @@ function Attendance() {
           </h1>
         </div>
         {canManageAttendance && (
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-col md:flex-row">
             <ExportData
               data={exportData}
               columns={attendanceExportColumns}

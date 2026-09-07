@@ -8,7 +8,7 @@ type EmployeeHeaderProps = {
 
 function EmployeeHeader({ exportAction, onAddEmployee }: EmployeeHeaderProps) {
   return (
-    <div className="flex items-end justify-between gap-6 pb-2">
+    <div className="flex items-end justify-between gap-6 pb-2 flex-col md:flex-row">
       <div className="flex flex-col gap-2">
         <h1 className="text-[32px] font-semibold leading-10 tracking-[-0.32px] text-[var(--text-primary-dark)]">
           Employee Directory

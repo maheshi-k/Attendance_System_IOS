@@ -145,7 +145,7 @@ function Profile() {
     <div className="min-h-full overflow-y-auto p-7">
       <div className="mx-auto max-w-full">
         {/* Page header */}
-        <div className="mb-7 flex items-start justify-between gap-4">
+        <div className="mb-7 flex items-start justify-between gap-4 flex-col md:flex-row">
           <div>
             <p className="text-xs font-bold uppercase tracking-[1px] text-[var(--secondary-muted)]">
               Account

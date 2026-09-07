@@ -16,6 +16,7 @@ import {
   type UpdateMyProfileData,
 } from "../services/employee.service";
 import { useRef, useState } from "react";
+import { toast } from "react-toastify";
 
 function ProfilePage() {
   const { employee, loading, setEmployee } = useEmployee();
@@ -71,6 +72,7 @@ function ProfilePage() {
       const updatedEmployee = await updateMyProfile(editForm);
       setEmployee(updatedEmployee);
       setIsEditOpen(false);
+      toast.success("Profile Updated Successfully");
     } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "Unable to update profile",
