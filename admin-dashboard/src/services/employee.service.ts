@@ -36,6 +36,19 @@ export const getEmployeeById = async (
   return response.data;
 };
 
+export const getMyProfile = async (): Promise<{
+  success: boolean;
+  data: EmployeeRecord;
+}> => {
+  const response = await api.get("/employees/myprofile");
+  return response.data;
+};
+
+export const updateMyProfile = async (profileData: FormData) => {
+  const response = await api.put("/employees/myprofile", profileData);
+  return response.data;
+};
+
 export const getAllSupervisors = async (): Promise<{
   success: boolean;
   supervisors: Supervisor[];

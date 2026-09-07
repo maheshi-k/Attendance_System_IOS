@@ -80,6 +80,10 @@ function ProfilePage() {
     }
   };
 
+  const displayValue = (value: string | null | undefined) => {
+    return value?.trim() ? value : "Not provided";
+  };
+
   const formatDate = (date: string | null) => {
     if (!date) return "--";
 
@@ -166,7 +170,7 @@ function ProfilePage() {
           <div className="mb-4 flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-[#3c6a00]" />
             <h2 className="text-[16px] font-semibold text-[#191c1d]">
-              Conatct Details
+              Contact Details
             </h2>
           </div>
 
@@ -188,7 +192,7 @@ function ProfilePage() {
               </span>
             </div>
             <p className="mt-3 text-[14px] font-medium text-[#191c1d]">
-              {employee.email_2}
+              {displayValue(employee.email_2)}
             </p>
           </div>
 
@@ -196,14 +200,21 @@ function ProfilePage() {
             <div className="flex items-center gap-2 text-[#625e58]">
               <Phone className="h-4 w-4 text-[#3c6a00]" />
               <span className="text-[11px] font-medium uppercase tracking-[0.5px]">
-                Phone
+                Phone No 1
               </span>
             </div>
             <p className="mt-3 text-[14px] font-medium text-[#191c1d]">
-              {employee.mobile_no_1}
+              {displayValue(employee.mobile_no_1)}
             </p>
+            <br></br>
+            <div className="flex items-center gap-2 text-[#625e58]">
+              <Phone className="h-4 w-4 text-[#3c6a00]" />
+              <span className="text-[11px] font-medium uppercase tracking-[0.5px]">
+                Phone No 2
+              </span>
+            </div>
             <p className="mt-3 text-[14px] font-medium text-[#191c1d]">
-              {employee.mobile_no_2}
+              {displayValue(employee.mobile_no_2)}
             </p>
           </div>
         </section>
@@ -242,7 +253,7 @@ function ProfilePage() {
                 </p>
               </div>
               <p className="mt-2 text-[15px] font-medium text-[#191c1d]">
-                {employee.address}
+                {displayValue(employee.address)}
               </p>
             </div>
 

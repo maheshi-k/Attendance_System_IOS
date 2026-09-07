@@ -3,6 +3,15 @@ const EMPLOYEE_KEY = "attendance_employee";
 const PERMISSIONS_KEY = "attendance_permissions";
 const SESSION_EXPIRY_KEY = "attendance_session_expiry";
 
+export const getStoredEmployee = <T>(): T | null => {
+  try {
+    const rawEmployee = localStorage.getItem(EMPLOYEE_KEY);
+    return rawEmployee ? (JSON.parse(rawEmployee) as T) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const clearAuthentication = () => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(EMPLOYEE_KEY);

@@ -19,6 +19,10 @@ import AttendanceFilters from "./AttendanceFilters";
 import AttendanceForm from "./AttendanceForm";
 import AttendanceSummary from "./AttendanceSummary";
 import AttendanceTable from "./AttendanceTable";
+import {
+  OFFICE_START_HOUR,
+  OFFICE_START_MINUTE,
+} from "../../config/app.config";
 
 const attendanceExportColumns: ExportColumn<AttendanceExportRow>[] = [
   { header: "Employee", value: "employee" },
@@ -141,9 +145,6 @@ function Attendance() {
     useState<AttendanceRecord | null>(null);
   const [isAttendanceFormOpen, setIsAttendanceFormOpen] = useState(false);
   const [activeEmployees, setActiveEmployees] = useState<EmployeeRecord[]>([]);
-
-  const OFFICE_START_HOUR = 8;
-  const OFFICE_START_MINUTE = 30;
 
   const getTardinessMinutes = (checkIn: string | null | undefined): number => {
     if (!checkIn) return 0;

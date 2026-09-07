@@ -8,35 +8,44 @@ import LeaveRequests from "../components/leaves/LeaveRequests";
 import MyLeaveRequests from "../components/leaves/MyLeaveRequests";
 import LeaveTypes from "../components/leaves/LeaveTypes";
 import Settings from "../components/Settings";
+import Profile from "../components/Profile/Profile";
 
 import ProtectedRoute from "./ProtectedRoute";
 
-import { menuItems } from "../config/navigation";
+import { menuItems, bottomItems } from "../config/navigation";
 import { getStoredPermissions } from "../auth/authStorage";
 
 function AppRoutes() {
   const permissions = getStoredPermissions();
 
-  const accessiblePaths = menuItems.flatMap((item) => {
-    if (item.disabled) {
+  const accessiblePaths = [
+    ...menuItems.flatMap((item) => {
+      if (item.disabled) {
+        return [];
+      }
+
+      if (item.children) {
+        return item.children
+          .filter(
+            (child) =>
+              !child.permission || permissions.includes(child.permission),
+          )
+          .map((child) => child.path)
+          .filter((path): path is string => Boolean(path));
+      }
+
+      if (!item.permission || permissions.includes(item.permission)) {
+        return item.path ? [item.path] : [];
+      }
+
       return [];
-    }
-    if (item.children) {
-      return item.children
-        .filter(
-          (child) =>
-            !child.permission || permissions.includes(child.permission),
-        )
-        .map((child) => child.path)
-        .filter((path): path is string => Boolean(path));
-    }
+    }),
 
-    if (!item.permission || permissions.includes(item.permission)) {
-      return item.path ? [item.path] : [];
-    }
-
-    return [];
-  });
+    ...bottomItems
+      .filter((item) => item.path)
+      .map((item) => item.path)
+      .filter((path): path is string => Boolean(path)),
+  ];
 
   const defaultPath = accessiblePaths.includes("/dashboard")
     ? "/dashboard"
@@ -184,6 +193,15 @@ function AppRoutes() {
             redirectTo={defaultPath}
           >
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute allowed={true} redirectTo={defaultPath}>
+            <Profile />
           </ProtectedRoute>
         }
       />
