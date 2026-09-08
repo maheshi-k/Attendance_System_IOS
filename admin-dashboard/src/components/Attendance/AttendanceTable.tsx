@@ -213,10 +213,25 @@ function AttendanceDateGroup({
 function groupAttendanceByDate(records: AttendanceRecord[]) {
   const groups = new Map<string, AttendanceRecord[]>();
 
-  records.forEach((record) => {
+  const sortedRecords = [...records].sort((a, b) => {
+    const dateA = new Date(
+      `${a.att_date.slice(0, 10)}T${a.check_in ?? "00:00:00"}`,
+    ).getTime();
+
+    const dateB = new Date(
+      `${b.att_date.slice(0, 10)}T${b.check_in ?? "00:00:00"}`,
+    ).getTime();
+
+    return dateB - dateA;
+  });
+
+  sortedRecords.forEach((record) => {
     const date = record.att_date.slice(0, 10);
+
     const group = groups.get(date) ?? [];
+
     group.push(record);
+
     groups.set(date, group);
   });
 

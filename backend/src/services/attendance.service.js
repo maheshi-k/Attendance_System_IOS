@@ -20,13 +20,10 @@ const profilePhotoDataUrl = (photo) => {
 
 export const markAttendance = async (emp_id, qr_token, client_date, client_time) => {
   const {
-  WORK_START_TIME,
-  GRACE_PERIOD_MINUTES,
-  MIN_CHECKOUT_HOURS,
-} = ATTENDANCE_CONFIG;
-
-console.log("Attendance date:", client_date);
-console.log("Attendance time:", client_time);
+    WORK_START_TIME,
+    GRACE_PERIOD_MINUTES,
+    MIN_CHECKOUT_HOURS,
+  } = ATTENDANCE_CONFIG;
 
   // 1. Check employee
   const employeeResult = await sql.query`
@@ -73,51 +70,68 @@ console.log("Attendance time:", client_time);
       status
     FROM ATT_Attendance
     WHERE emp_id = ${emp_id}
-      AND att_date = ${client_date}
+      AND att_date = CONVERT(date, ${client_date}, 23)
   `;
 
   const attendance = todayResult.recordset[0];
 
-  // 4. First scan → Check In
-  if (!attendance) {
-    const result = await sql.query`
-  INSERT INTO ATT_Attendance (
-    emp_id,
-    att_date,
-    check_in,
-    status
-  )
-  OUTPUT
-    INSERTED.att_id,
-    INSERTED.emp_id,
-    INSERTED.att_date,
-    INSERTED.check_in,
-    INSERTED.check_out,
-    INSERTED.status,
-    INSERTED.created_at,
-    INSERTED.updated_at
-  VALUES (
-    ${emp_id},
-    ${client_date},
-    ${client_time},
-    CASE
-      WHEN CAST(${client_time} AS TIME) >
-           DATEADD(
-             MINUTE,
-             ${GRACE_PERIOD_MINUTES},
-             CAST(${WORK_START_TIME} AS TIME)
-           )
-      THEN 'Late'
-      ELSE 'Present'
-    END
-  )
-`;
+  //**********attendance ********
 
-    return {
-      action: "CHECK_IN",
-      attendance: result.recordset[0],
-    };
-  }
+//   
+
+const request = new sql.Request();
+
+request.input("emp_id", sql.Int, emp_id);
+request.input("att_date", sql.Date, client_date);
+request.input("check_in", sql.VarChar(8), client_time);
+request.input("grace_period", sql.Int, GRACE_PERIOD_MINUTES);
+request.input("work_start_time", sql.VarChar(8), WORK_START_TIME);
+
+if (!attendance) {
+  const result = await request.query(`
+    INSERT INTO ATT_Attendance (
+      emp_id,
+      att_date,
+      check_in,
+      status
+    )
+    OUTPUT
+      INSERTED.att_id,
+      INSERTED.emp_id,
+      INSERTED.att_date,
+      CONVERT(varchar(8), INSERTED.check_in, 108) AS check_in,
+      CONVERT(varchar(8), INSERTED.check_out, 108) AS check_out,
+      INSERTED.status,
+      INSERTED.created_at,
+      INSERTED.updated_at
+    VALUES (
+      @emp_id,
+      @att_date,
+      CAST(@check_in AS TIME),
+      CASE
+        WHEN CAST(@check_in AS TIME) >
+             DATEADD(
+               MINUTE,
+               @grace_period,
+               CAST(@work_start_time AS TIME)
+             )
+        THEN 'Late'
+        ELSE 'Present'
+      END
+    )
+  `);
+
+  console.log("========== ATTENDANCE DEBUG ==========");
+  console.log("CLIENT DATE:", client_date);
+  console.log("CLIENT TIME:", client_time);
+  console.log("INSERTED RECORD:", result.recordset[0]);
+  console.log("======================================");
+
+  return {
+    action: "CHECK_IN",
+    attendance: result.recordset[0],
+  };
+}
 
   // 5. Already checked out
   if (attendance.check_out) {
@@ -129,7 +143,7 @@ const timeResult = await sql.query`
   SELECT DATEDIFF(
     MINUTE,
     check_in,
-    CAST(${client_time} AS TIME)
+    CONVERT(time(0), ${client_time})
   ) AS minutes_elapsed
   FROM ATT_Attendance
   WHERE att_id = ${attendance.att_id}
@@ -147,7 +161,7 @@ if (minutesElapsed < MIN_CHECKOUT_HOURS * 60) {
   const result = await sql.query`
     UPDATE ATT_Attendance
     SET
-      check_out = ${client_time},
+      check_out = CONVERT(time(0), ${client_time}),
       updated_at = GETDATE()
     OUTPUT
       INSERTED.att_id,
@@ -260,6 +274,7 @@ export const getSelfAttendance = async (emp_id) => {
   `);
 
   const records = result.recordset;
+  
   const counts = result.recordsets[1][0] ?? {};
   const today = records.find(
     (record) =>

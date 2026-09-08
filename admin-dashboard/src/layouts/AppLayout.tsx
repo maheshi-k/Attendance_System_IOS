@@ -1,16 +1,24 @@
 import { useState } from "react";
-import { ToastContainer } from "react-toastify";
+// import { ToastContainer } from "react-toastify";
 
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import AppRoutes from "../routes/AppRoutes";
 
-function AppLayout() {
+type AppLayoutProps = {
+  onLogout: () => void;
+};
+
+function AppLayout({ onLogout }: AppLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--primary)] text-[var(--text-primary)]">
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onLogout={onLogout}
+      />
 
       <div className="flex h-screen min-w-0 flex-1 flex-col">
         <Header onMenuClick={() => setIsSidebarOpen(true)} />
@@ -20,7 +28,7 @@ function AppLayout() {
         </main>
       </div>
 
-      <ToastContainer position="bottom-right" autoClose={3000} />
+      {/* <ToastContainer position="bottom-right" autoClose={3000} /> */}
     </div>
   );
 }

@@ -74,13 +74,13 @@ function AttendanceForm({ attendance, onClose, onSaved }: AttendanceFormProps) {
       type: "select",
       required: true,
       disabled: loadingEmployees,
-      defaultValue: attendance?.emp_id ?? "",
+      defaultValue: attendance ? String(attendance.emp_id) : "",
       placeholder: loadingEmployees
         ? "Loading employees..."
         : "Select employee",
       options: employees.map((employee) => ({
         label: `${employee.first_name} ${employee.last_name} (${employee.emp_code})`,
-        value: employee.emp_id,
+        value: employee.emp_id.toString(),
       })),
     },
     {
@@ -123,6 +123,7 @@ function AttendanceForm({ attendance, onClose, onSaved }: AttendanceFormProps) {
 
   return (
     <CommonForm
+      key={`${id ?? "new"}-${loadingEmployees ? "loading" : "ready"}`}
       eyebrow="Attendance Records"
       title={isEditing ? "Edit Attendance" : "Add Attendance"}
       fields={fields}

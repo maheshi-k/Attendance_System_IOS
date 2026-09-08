@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { Bell, Search, Settings, Menu } from "lucide-react";
 import defaultProfile from "../assets/avatar.png";
 
@@ -17,6 +18,7 @@ type HeaderProps = {
 
 function Header({ onMenuClick }: HeaderProps) {
   const [user, setUser] = useState<EmployeeProfile>({});
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,6 +49,16 @@ function Header({ onMenuClick }: HeaderProps) {
 
   const isAdmin = user.role_id === 1;
 
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const query = searchQuery.trim();
+
+    navigate(
+      query ? `/employees?search=${encodeURIComponent(query)}` : "/employees",
+    );
+  };
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-[rgba(194,201,181,0.3)] bg-[rgba(248,249,250,0.8)] px-4 backdrop-blur-[6px] sm:px-6">
       {/* Left side */}
@@ -62,7 +74,10 @@ function Header({ onMenuClick }: HeaderProps) {
         </button>
 
         {/* Search */}
-        <div className="relative hidden w-[320px] md:block">
+        <form
+          onSubmit={handleSearch}
+          className="relative hidden w-[320px] md:block"
+        >
           <Search
             aria-hidden="true"
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[#73786e]"
@@ -72,11 +87,13 @@ function Header({ onMenuClick }: HeaderProps) {
 
           <input
             type="search"
-            placeholder="Search employees, reports..."
-            aria-label="Search employees and reports"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search employees"
+            aria-label="Search employees"
             className="h-10 w-full rounded-full border border-[#c2c9b5] bg-[#f3f4f5] pl-[41px] pr-4 text-sm text-[#191c1d] outline-none placeholder:text-[#6b7280] focus:border-[var(--text-secondary)]"
           />
-        </div>
+        </form>
       </div>
 
       {/* Right side */}

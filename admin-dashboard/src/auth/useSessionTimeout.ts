@@ -56,6 +56,11 @@ export function useSessionTimeout({
     };
 
     const resetInactivityTimer = () => {
+      // Do not recreate the session after logout
+      if (!localStorage.getItem("attendance_token")) {
+        return;
+      }
+
       const newExpiry = Date.now() + INACTIVITY_TIMEOUT_MS;
 
       localStorage.setItem(SESSION_EXPIRY_KEY, String(newExpiry));

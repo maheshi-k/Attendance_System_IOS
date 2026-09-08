@@ -125,7 +125,8 @@ function QrScannerModal({
           return;
         }
 
-        await checkAttendance(qrToken.trim());
+        // await checkAttendance(qrToken.trim());
+        const attendanceResult = await checkAttendance(qrToken.trim());
 
         if (currentSession !== scannerSessionRef.current) {
           return;
@@ -145,10 +146,9 @@ function QrScannerModal({
           );
         }
 
-        const timeString =
-          todayAttendance.check_out || todayAttendance.check_in || "";
-
-        const formattedTime = formatAttendanceTime(timeString);
+        const formattedTime = formatAttendanceTime(
+          attendanceResult.client_time,
+        );
 
         const status = todayAttendance.check_out ? "check-out" : "check-in";
 
@@ -159,10 +159,6 @@ function QrScannerModal({
           status,
           time: formattedTime,
         });
-
-        if (currentSession === scannerSessionRef.current) {
-          onAttendanceUpdated(updatedAttendance);
-        }
       } catch (error) {
         if (currentSession !== scannerSessionRef.current) {
           return;

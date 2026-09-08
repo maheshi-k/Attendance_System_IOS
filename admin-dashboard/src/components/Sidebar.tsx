@@ -8,9 +8,10 @@ import Logo from "../assets/Logo.png";
 type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
+  onLogout: () => void;
 };
 
-function Sidebar({ isOpen, onClose }: SidebarProps) {
+function Sidebar({ isOpen, onClose, onLogout }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
@@ -182,10 +183,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                   type="button"
                   onClick={() => {
                     setExpandedMenu(null);
-                    localStorage.removeItem("attendance_token");
-                    localStorage.removeItem("attendance_employee");
-                    window.dispatchEvent(new Event("auth:change"));
-                    navigate("/login", { replace: true });
+                    onLogout();
                   }}
                   className="flex h-[42px] w-full items-center gap-3 rounded-lg px-4 text-sm font-medium text-red-600 transition hover:bg-red-50"
                 >
@@ -371,13 +369,7 @@ function Sidebar({ isOpen, onClose }: SidebarProps) {
                     onClick={() => {
                       setExpandedMenu(null);
                       onClose();
-
-                      localStorage.removeItem("attendance_token");
-                      localStorage.removeItem("attendance_employee");
-
-                      window.dispatchEvent(new Event("auth:change"));
-
-                      navigate("/login", { replace: true });
+                      onLogout();
                     }}
                     className="flex h-[42px] w-full items-center gap-3 rounded-lg px-4 text-sm font-medium text-red-600 transition hover:bg-red-50"
                   >

@@ -11,7 +11,7 @@ import type { EmployeeRecord, EmployeeStatus } from "../../types/employee";
 
 type StatusFilter = "All Status" | EmployeeStatus;
 
-export function useEmployees() {
+export function useEmployees(searchQuery = "") {
   // ---------------------------------------------------------------------------
   // State
   // ---------------------------------------------------------------------------
@@ -48,20 +48,36 @@ export function useEmployees() {
     : "All Designations";
 
   const filteredEmployees = useMemo(() => {
-    if (activeDesignation === "All Designations") {
-      return employees;
-    }
+    const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return employees.filter(
-      (employee) => employee.designation === activeDesignation,
-    );
-  }, [employees, activeDesignation]);
+    return employees.filter((employee) => {
+      const matchesSearch =
+        !normalizedQuery ||
+        [
+          employee.first_name,
+          employee.last_name,
+          employee.emp_code,
+          employee.email_1,
+          employee.designation,
+        ]
+          .filter((value): value is string => Boolean(value))
+          .some((value) => value.toLowerCase().includes(normalizedQuery));
+
+      const matchesDesignation =
+        activeDesignation === "All Designations" ||
+        employee.designation === activeDesignation;
+
+      return matchesSearch && matchesDesignation;
+    });
+  }, [employees, activeDesignation, searchQuery]);
 
   const totalEmployees = filteredEmployees.length;
 
   const totalPages = Math.ceil(totalEmployees / rowsPerPage);
 
-  const startIndex = (currentPage - 1) * rowsPerPage;
+  const visiblePage = totalPages ? Math.min(currentPage, totalPages) : 1;
+
+  const startIndex = (visiblePage - 1) * rowsPerPage;
 
   const endIndex = Math.min(startIndex + rowsPerPage, totalEmployees);
 
@@ -152,7 +168,7 @@ export function useEmployees() {
 
     // Pagination
     totalPages,
-    currentPage,
+    currentPage: visiblePage,
     rowsPerPage,
     startIndex,
     endIndex,

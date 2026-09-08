@@ -2,7 +2,7 @@ import { markAttendance, getAllAttendance, getSelfAttendance, getAttendanceByEmp
 
 export const markAttendanceController = async (req, res) => {
   try {
-    const { qr_token, client_date ,client_time } = req.body;
+    const { qr_token, client_date, client_time } = req.body;
     const emp_id = req.user.emp_id;
 
     if (!qr_token) {
@@ -12,12 +12,15 @@ export const markAttendanceController = async (req, res) => {
       });
     }
 
-    if (!client_date || !client_time) {
-    return res.status(400).json({
-      success: false,
-      message: "Client date and time are required",
-    });
-}
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(client_date ?? "") ||
+      !/^\d{2}:\d{2}:\d{2}$/.test(client_time ?? "")
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Client date must be YYYY-MM-DD and client time must be HH:mm:ss",
+      });
+    }
 
     const result = await markAttendance(emp_id, qr_token,client_date, client_time);
 

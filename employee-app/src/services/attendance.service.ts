@@ -25,20 +25,28 @@ export const getSelfAttendance = async (): Promise<SelfAttendance> => {
   return result.data;
 };
 
+function formatLocalYYYYMMDDHHmmss(date = new Date()) {
+  const pad = (num: number) => String(num).padStart(2, "0");
+
+  const yyyy = date.getFullYear();
+  const mm = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const hh = pad(date.getHours());
+  const min = pad(date.getMinutes());
+  const ss = pad(date.getSeconds());
+
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+}
+
 export const checkAttendance = async (qr_token: string) => {
   const now = new Date();
+  const client_datetime = formatLocalYYYYMMDDHHmmss(now);
 
-  const client_date = [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0"),
-  ].join("-");
+  const [client_date, client_time] = client_datetime.split(" ");
 
-  const client_time = [
-    String(now.getHours()).padStart(2, "0"),
-    String(now.getMinutes()).padStart(2, "0"),
-    String(now.getSeconds()).padStart(2, "0"),
-  ].join(":");
+  console.log("LOCAL DATETIME:", client_datetime);
+  console.log("LOCAL DATE:", client_date);
+  console.log("LOCAL TIME:", client_time);
 
   const response = await fetch(
     `${import.meta.env.VITE_BASE_URL ?? "/api"}/attendance/check`,
@@ -46,12 +54,15 @@ export const checkAttendance = async (qr_token: string) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("attendance_token") ?? ""}`,
+        Authorization: `Bearer ${
+          localStorage.getItem("attendance_token") ?? ""
+        }`,
       },
       body: JSON.stringify({
         qr_token,
         client_date,
         client_time,
+        client_datetime,
       }),
     },
   );
@@ -65,5 +76,8 @@ export const checkAttendance = async (qr_token: string) => {
     throw new Error(result.message ?? "Unable to mark attendance");
   }
 
-  return result.data;
+  return {
+    data: result.data,
+    client_time,
+  };
 };

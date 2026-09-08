@@ -72,15 +72,18 @@ describe("employee attendance flows", () => {
   it("marks attendance with the scanned QR token", async () => {
     vi.mocked(fetch).mockReturnValueOnce(response(attendanceRecord));
 
-    await expect(checkAttendance("office-qr-token")).resolves.toEqual(
-      attendanceRecord,
-    );
+    const result = await checkAttendance("office-qr-token");
+
+    expect(result.data).toEqual(attendanceRecord);
+    expect(result.client_time).toMatch(/^\d{2}:\d{2}:\d{2}$/);
 
     expect(fetch).toHaveBeenCalledWith(
       `${apiBaseUrl}/attendance/check`,
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ qr_token: "office-qr-token" }),
+        body: expect.stringMatching(
+          /\{"qr_token":"office-qr-token","client_date":"\d{4}-\d{2}-\d{2}","client_time":"\d{2}:\d{2}:\d{2}"\}/,
+        ),
         headers: expect.objectContaining({
           Authorization: "Bearer test-token",
         }),

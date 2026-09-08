@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { getAllEmployees } from "../../services/employee.service";
 import type { EmployeeExportRow, EmployeeRecord } from "../../types/employee";
@@ -35,6 +35,7 @@ const employeeExportColumns: ExportColumn<EmployeeExportRow>[] = [
 
 function Employee() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedEmployee, setSelectedEmployee] =
     useState<EmployeeRecord | null>(null);
   const {
@@ -55,7 +56,7 @@ function Employee() {
     setCurrentPage,
     setRowsPerPage,
     deactivateEmployee,
-  } = useEmployees();
+  } = useEmployees(searchParams.get("search") ?? "");
 
   const loadEmployeeExportData = async (): Promise<EmployeeExportRow[]> => {
     const response = await getAllEmployees();

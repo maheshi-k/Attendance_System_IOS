@@ -14,7 +14,7 @@ function RecentAttendance({ records, loading }: RecentAttendanceProps) {
       records
         .filter((record) => status === "All Status" || record.status === status)
         .sort((first, second) => second.att_date.localeCompare(first.att_date))
-        .slice(0, 4),
+        .slice(0, 5),
     [records, status],
   );
 
@@ -150,7 +150,7 @@ function RecentAttendance({ records, loading }: RecentAttendanceProps) {
         </table>
       </div>
       <div className="px-5 py-4 text-[10px] text-[var(--text-primary-light)]">
-        Showing {recentRecords.length} of {records.length} employees
+        Showing {recentRecords.length} of {records.length} records
       </div>
     </section>
   );
