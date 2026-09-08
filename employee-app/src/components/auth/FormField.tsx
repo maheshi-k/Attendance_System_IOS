@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
+import type { LucideProps } from "lucide-react";
 
 type FormFieldProps = {
   id: string;
@@ -6,7 +7,7 @@ type FormFieldProps = {
   type: "email" | "password" | "text";
   value: string;
   placeholder: string;
-  icon: string;
+  icon?: ComponentType<LucideProps>;
   onChange: (value: string) => void;
   trailing?: ReactNode;
 };
@@ -17,7 +18,7 @@ function FormField({
   type,
   value,
   placeholder,
-  icon,
+  icon: Icon,
   onChange,
   trailing,
 }: FormFieldProps) {
@@ -25,11 +26,13 @@ function FormField({
     <label htmlFor={id} className="block text-sm font-semibold text-[#424939]">
       {label}
       <span className="relative mt-2 flex h-12 items-center rounded-xl border border-[#c2c9b5] bg-white px-3 focus-within:ring-2 focus-within:ring-[#83bb49]/30">
-        <img
-          src={icon}
-          alt=""
-          className="mr-3 h-4 w-4 shrink-0 object-contain"
-        />
+        {Icon && (
+          <Icon
+            size={17}
+            strokeWidth={1.8}
+            className="mr-3 shrink-0 text-[#6b7280]"
+          />
+        )}
         <input
           id={id}
           type={type}

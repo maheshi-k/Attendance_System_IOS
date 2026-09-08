@@ -1,4 +1,4 @@
-import { Download, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { AttendanceRecord } from "../types/attendance";
 
@@ -48,13 +48,13 @@ function RecentAttendance({ records, loading }: RecentAttendanceProps) {
               <option>On Leave</option>
             </select>
           </label>
-          <button
+          {/* <button
             type="button"
             className="flex h-10 items-center gap-2 rounded-lg border border-[var(--border-dashed)] px-3 text-xs font-semibold text-[var(--text-primary-dark)] transition hover:bg-[#f5f7f4]"
           >
             <Download size={15} />
             Export
-          </button>
+          </button> */}
         </div>
       </div>
       <div className="overflow-x-auto">

@@ -20,6 +20,7 @@ import {
 } from "../../services/employee.service";
 import type { EmployeeRecord, DesignationHistory } from "../../types/employee";
 import type { Supervisor } from "../../services/employee.service";
+import axios from "axios";
 
 type DesignationRow = {
   id: number;
@@ -182,9 +183,21 @@ function AddEmployee() {
     } catch (error) {
       console.error("Error creating employee:", error);
 
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create employee",
-      );
+      if (axios.isAxiosError(error)) {
+        const errors = error.response?.data?.errors;
+
+        if (Array.isArray(errors) && errors.length > 0) {
+          errors.forEach((message: string) => {
+            toast.error(message);
+          });
+        } else {
+          toast.error(
+            error.response?.data?.message || "Failed to save employee",
+          );
+        }
+      } else {
+        toast.error("Failed to save employee");
+      }
     }
   };
 
@@ -342,7 +355,7 @@ function AddEmployee() {
                   <option value="3">Employee</option>
                 </select>
               </label>
-              {selectedRole === "1" && (
+              {selectedRole === "3" && (
                 <label className="text-sm font-medium text-[var(--text-primary-light)]">
                   Supervisor
                   <select

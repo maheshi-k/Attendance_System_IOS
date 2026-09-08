@@ -1,15 +1,7 @@
 import { useState, type FormEvent } from "react";
 import FormField from "./FormField";
 import { loginEmployee } from "../../services/auth.service";
-
-const emailIcon =
-  "https://www.figma.com/api/mcp/asset/87a0513f-4a76-46fc-a400-80a8b6ca9569.svg";
-const passwordIcon =
-  "https://www.figma.com/api/mcp/asset/8ecf2f79-0d06-426b-8e31-a5e6e187e8f3.svg";
-const eyeIcon =
-  "https://www.figma.com/api/mcp/asset/4c3c566a-e8bb-4384-9f94-22f030778224.svg";
-const signInIcon =
-  "https://www.figma.com/api/mcp/asset/4558eaf7-c25f-41a9-b9dd-b9ff969a7b03.svg";
+import { Eye, LockKeyhole, Mail, LogIn } from "lucide-react";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -65,7 +57,7 @@ function LoginForm() {
         type="email"
         value={email}
         placeholder="Enter your Email"
-        icon={emailIcon}
+        icon={Mail}
         onChange={setEmail}
       />
 
@@ -75,7 +67,7 @@ function LoginForm() {
         type={showPassword ? "text" : "password"}
         value={password}
         placeholder="••••••••"
-        icon={passwordIcon}
+        icon={LockKeyhole}
         onChange={setPassword}
         trailing={
           <button
@@ -84,11 +76,7 @@ function LoginForm() {
             onClick={() => setShowPassword((visible) => !visible)}
             className="flex h-7 w-7 shrink-0 items-center justify-center"
           >
-            <img
-              src={eyeIcon}
-              alt=""
-              className="h-[15px] w-[22px] object-contain"
-            />
+            <Eye size={17} strokeWidth={1.8} className="h-[15px] w-[22px]" />
           </button>
         }
       />
@@ -111,11 +99,7 @@ function LoginForm() {
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#83bb49] py-4 text-base font-semibold text-white shadow-[0_10px_15px_-3px_rgba(60,106,0,0.2),0_4px_6px_-4px_rgba(60,106,0,0.2)] transition hover:bg-[#75ad3d] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSubmitting ? "Signing In..." : "Sign In"}
-        <img
-          src={signInIcon}
-          alt=""
-          className="h-[18px] w-[18px] object-contain"
-        />
+        <LogIn size={17} strokeWidth={1.8} className="h-[18px] w-[18px]" />
       </button>
     </form>
   );
