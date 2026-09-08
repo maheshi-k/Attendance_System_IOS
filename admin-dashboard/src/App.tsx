@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import Login from "./components/Login";
 import AppLayout from "./layouts/AppLayout";
+import NotFound from "./components/NotFound";
 
 import { clearAuthentication, getInitialAuthState } from "./auth/authStorage";
 
@@ -45,7 +46,10 @@ function App() {
             element={<Login onLoginSuccess={() => setIsAuthenticated(true)} />}
           />
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route
+            path="*"
+            element={<NotFound homePath="/login" homeLabel="Login" />}
+          />
         </Routes>
 
         <ToastContainer position="bottom-right" autoClose={3000} />

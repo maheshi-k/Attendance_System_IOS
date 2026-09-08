@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -7,6 +7,7 @@ import LoginPage from "./components/auth/LoginPage";
 import HomePage from "./components/home/HomePage";
 import AttendanceHistory from "./pages/AttendanceHistory";
 import ProfilePage from "./pages/ProfilePage";
+import NotFound from "./pages/NotFound";
 import EmployeeLayout from "./layouts/EmployeeLayout";
 import { useInactivityLogout } from "./hooks/useInactivityLogout";
 
@@ -47,7 +48,7 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       ) : (
         <LoginPage />

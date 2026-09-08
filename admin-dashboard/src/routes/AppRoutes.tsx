@@ -9,6 +9,7 @@ import MyLeaveRequests from "../components/leaves/MyLeaveRequests";
 import LeaveTypes from "../components/leaves/LeaveTypes";
 import Settings from "../components/Settings";
 import Profile from "../components/Profile/Profile";
+import NotFound from "../components/NotFound";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -206,7 +207,7 @@ function AppRoutes() {
         }
       />
 
-      <Route path="*" element={<Navigate to={defaultPath} replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

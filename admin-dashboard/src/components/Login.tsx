@@ -53,6 +53,7 @@ function Login({ onLoginSuccess }: LoginProps) {
       window.dispatchEvent(new Event("auth:change"));
 
       onLoginSuccess();
+      navigate("/dashboard", { replace: true });
       toast.success("Login successful");
     } catch (error: any) {
       const message =
