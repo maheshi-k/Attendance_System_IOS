@@ -47,9 +47,6 @@ export const getStatusBadgeColor = (status: string) => {
     case "Late":
       return "bg-[#ffdad6]";
 
-    case "Absent":
-      return "bg-[#ffcdd2]";
-
     default:
       return "bg-[#edeeef]";
   }
@@ -58,13 +55,23 @@ export const getStatusBadgeColor = (status: string) => {
 export const getStatusTextColor = (status: string) => {
   switch (status) {
     case "Present":
-      return "text-[#234100]";
+      return "text-[#5c9d10]";
 
     case "Late":
-      return "text-[#93000a]";
+      return "text-[#c7a909]";
 
-    case "Absent":
-      return "text-[#5d0000]";
+    default:
+      return "text-[#625e58]";
+  }
+};
+
+export const getStatusTitleColor = (status: string) => {
+  switch (status) {
+    case "Present":
+      return "text-[#5c9d10]";
+
+    case "Late":
+      return "text-[#c7a909]";
 
     default:
       return "text-[#625e58]";

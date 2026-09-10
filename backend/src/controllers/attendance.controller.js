@@ -1,4 +1,4 @@
-import { markAttendance, getAllAttendance, getSelfAttendance, getAttendanceByEmpID, addManualAttendance, getAttendanceByID, updateManualAttendance, getSelfAttendanceView } from "../services/attendance.service.js";
+import { markAttendance, getAllAttendance, getSelfAttendance, getAttendanceByEmpID, addManualAttendance, getAttendanceByID, updateManualAttendance, getSelfAttendanceView , addManualAttendanceByEmp } from "../services/attendance.service.js";
 
 export const markAttendanceController = async (req, res) => {
   try {
@@ -142,12 +142,12 @@ export const getSelfAttendanceViewController = async (req, res) => {
 
 export const addManualAttendanceController = async (req, res) => {
   try {
-    const { emp_id, att_date, check_in, check_out, status } = req.body;
+    const { emp_id, att_date, check_in, check_out } = req.body;
 
-    if (!emp_id || !att_date || !check_in || !status) {
+    if (!emp_id || !att_date || !check_in ) {
       return res.status(400).json({
         success: false,
-        message: "Employee, date, check-in time and status are required",
+        message: "Employee, date, check-in time are required",
       });
     }
 
@@ -156,7 +156,7 @@ export const addManualAttendanceController = async (req, res) => {
       att_date,
       check_in,
       check_out,
-      status,
+      // status,
     });
 
     return res.status(201).json({
@@ -166,9 +166,80 @@ export const addManualAttendanceController = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding attendance:", error);
+    if (error.code === "ATTENDANCE_EXISTS") {
+      return res.status(409).json({
+        success: false,
+        message: "Attendance already exists for this date.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
-      message: "Failed to add attendance. The employee may already have a record for this date.",
+      message: "Failed to add attendance.",
+    });
+  }
+};
+
+export const addAttendanceByEmpController = async (req, res) => {
+  try {
+    const { att_date, attendance_time } = req.body;
+
+    const emp_id = req.user.emp_id;
+
+    if (!emp_id || !att_date || !attendance_time ) {
+      return res.status(400).json({
+        success: false,
+        message: "Attendance date and time are require",
+      });
+    }
+
+    const attendance = await addManualAttendanceByEmp({
+      emp_id,
+      att_date,
+      attendance_time,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: attendance.action === "check_in"
+        ? "Check-in attendance added successfully"
+        : "Check-out attendance added successfully",
+      data: attendance,
+    });
+  } catch (error) {
+    console.error("Error adding attendance:", error);
+
+    if (error.message === "EMPLOYEE_NOT_FOUND") {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found.",
+      });
+    }
+
+    if (error.message === "EMPLOYEE_INACTIVE") {
+      return res.status(403).json({
+        success: false,
+        message: "Employee account is inactive.",
+      });
+    }
+
+    if (error.message === "ATTENDANCE_COMPLETED") {
+      return res.status(409).json({
+        success: false,
+        message: "Today's attendance is already completed.",
+      });
+    }
+
+    if (error.message === "MIN_CHECKOUT_TIME") {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum working hours have not been completed.",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to add attendance.",
     });
   }
 };
@@ -225,12 +296,12 @@ export const getAttendanceByIDController = async (req, res) => {
 
 export const updateManualAttendanceController = async (req, res) => {
   try {
-    const { emp_id, att_date, check_in, check_out, status } = req.body;
+    const { emp_id, att_date, check_in, check_out } = req.body;
 
-    if (!emp_id || !att_date || !check_in || !status) {
+    if (!emp_id || !att_date || !check_in ) {
       return res.status(400).json({
         success: false,
-        message: "Employee, date, check-in time and status are required",
+        message: "Employee, date, check-in time are required",
       });
     }
 
@@ -240,7 +311,6 @@ export const updateManualAttendanceController = async (req, res) => {
       att_date,
       check_in,
       check_out,
-      status,
     });
 
     if (!attendance) {

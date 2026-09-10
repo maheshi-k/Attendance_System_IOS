@@ -4,9 +4,11 @@ import QrScanAction from "./QrScanAction";
 import RecentRecords from "./RecentRecords";
 import type { EmployeeLayoutContext } from "../../layouts/EmployeeLayout";
 import { useOutletContext } from "react-router-dom";
+import { getSelfAttendance } from "../../services/attendance.service";
 
 function HomePage() {
-  const { openScanner, attendance } = useOutletContext<EmployeeLayoutContext>();
+  const { openScanner, attendance, setAttendance } =
+    useOutletContext<EmployeeLayoutContext>();
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-28 m-2 text-[#191c1d]">
@@ -15,7 +17,13 @@ function HomePage() {
 
         <AttendanceStats stats={attendance.stats} />
 
-        <QrScanAction onScan={openScanner} />
+        <QrScanAction
+          onScan={openScanner}
+          // todayAttendance={attendance.today}
+          onAttendanceSubmitted={async () =>
+            setAttendance(await getSelfAttendance())
+          }
+        />
 
         <RecentRecords records={attendance.records} />
       </main>

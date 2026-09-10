@@ -1,4 +1,4 @@
-export type AttendanceStatus = "Present" | "Late" | "Absent" | "On Leave";
+export type AttendanceStatus = "Present" | "Late";
 
 export type AttendanceDateRange =
   | "Today"
@@ -30,7 +30,7 @@ export type CreateAttendanceRequest = {
   att_date: string;
   check_in: string;
   check_out?: string;
-  status: AttendanceStatus;
+  // status: AttendanceStatus;
 };
 
 export type AttendanceExportRow = {

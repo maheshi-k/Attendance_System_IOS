@@ -7,14 +7,30 @@ import { generateQRCode } from "../services/qr.service";
 interface QRData {
   qr_id: number;
   qr_token: string;
+  qr_url: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
+const extractWebUrl = (value: string) => {
+  try {
+    const url = new URL(value);
+
+    if (url.origin !== "https://attendance.justbooksalon.com") {
+      return null;
+    }
+
+    return url.origin;
+  } catch {
+    return null;
+  }
+};
+
 function Settings() {
   const [qrData, setQrData] = useState<QRData | null>(null);
   const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
+  const [qrWebUrl, setQrWebUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -27,8 +43,8 @@ function Settings() {
         setQrData(response.data);
 
         // Generate QR code image from token
-        const qrToken = response.data.qr_token;
-        const imageUrl = await QRCode.toDataURL(qrToken, {
+        const qrUrl = response.data.qr_url;
+        const imageUrl = await QRCode.toDataURL(qrUrl, {
           width: 300,
           margin: 10,
           color: {
@@ -36,6 +52,10 @@ function Settings() {
             light: "#FFFFFF",
           },
         });
+
+        const weblink = extractWebUrl(qrUrl);
+
+        setQrWebUrl(weblink);
         setQrImageUrl(imageUrl);
         toast.success("QR code generated successfully!");
       }
@@ -144,6 +164,21 @@ function Settings() {
                         <p className="break-all font-mono text-xs text-[var(--text-primary)]">
                           {qrData.qr_token}
                         </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-[var(--text-secondary)]">
+                          Website Url
+                        </p>
+                        {qrWebUrl && (
+                          <a
+                            href={qrWebUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="break-all font-mono text-xs text-blue-600 underline hover:text-blue-800"
+                          >
+                            {qrWebUrl}
+                          </a>
+                        )}
                       </div>
                       <div className="space-y-1">
                         <p className="text-sm font-medium text-[var(--text-secondary)]">

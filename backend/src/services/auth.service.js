@@ -74,7 +74,7 @@ export const loginEmployee = async (email_1, password) => {
   );
 
   if (!passwordMatch) {
-    throw new Error("Invalid email_1 or password");
+    throw new Error("Invalid email or password");
   }
 
   const token = jwt.sign(

@@ -4,6 +4,7 @@ import logoAsset from "../../assets/logo.png";
 import avatarAsset from "../../assets/avatar.png";
 import { Eye, EyeOff, KeyRound, LogOut, Settings, X } from "lucide-react";
 import { changePassword } from "../../services/auth.service";
+import { toast } from "react-toastify";
 // import notificationAsset from "../../assets/notificationAsset.svg";
 
 type HomeHeaderProps = {
@@ -21,7 +22,9 @@ function HomeHeader({
 }: HomeHeaderProps) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isPasswordDrawerOpen, setIsPasswordDrawerOpen] = useState(false);
-  const [showPasswords, setShowPasswords] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -64,7 +67,8 @@ function HomeHeader({
     try {
       await changePassword(currentPassword, newPassword);
 
-      setPasswordMessage("Password updated successfully");
+      // setPasswordMessage("Password updated successfully");
+      toast.success("Password updated successfully");
 
       // Clear password fields
       setCurrentPassword("");
@@ -135,8 +139,10 @@ function HomeHeader({
                   <p className="truncate text-sm font-semibold text-[#191c1d]">
                     {employeeName}
                   </p>
-
-                  <p className="text-xs text-[#625e58]">{employeeRole}</p>
+                  {(employeeRole == "Admin" ||
+                    employeeRole == "Supervisor") && (
+                    <p className="text-xs text-[#625e58]">{employeeRole}</p>
+                  )}
                 </div>
               )}
 
@@ -209,48 +215,96 @@ function HomeHeader({
                   <KeyRound className="h-5 w-5 shrink-0" />
                   <p>Use a password with at least 6 characters.</p>
                 </div>
-                {[
-                  ["Current password", currentPassword, setCurrentPassword],
-                  ["New password", newPassword, setNewPassword],
-                  ["Confirm new password", confirmPassword, setConfirmPassword],
-                ].map(([label, value, setter]) => (
-                  <label
-                    key={label as string}
-                    className="block text-xs font-medium text-[#625e58]"
-                  >
-                    {label as string}
-                    <span className="relative mt-1 block">
-                      <input
-                        required
-                        minLength={label === "Current password" ? undefined : 6}
-                        type={showPasswords ? "text" : "password"}
-                        value={value as string}
-                        onChange={(event) =>
-                          (
-                            setter as React.Dispatch<
-                              React.SetStateAction<string>
-                            >
-                          )(event.target.value)
-                        }
-                        className="w-full rounded-lg border border-[#c2c9b5] px-3 py-2.5 pr-11 text-sm text-[#191c1d] outline-none focus:border-[#3c6a00]"
-                      />
-                      <button
-                        type="button"
-                        aria-label={
-                          showPasswords ? "Hide passwords" : "Show passwords"
-                        }
-                        onClick={() => setShowPasswords((visible) => !visible)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[#625e58] hover:bg-[#f1f4eb]"
-                      >
-                        {showPasswords ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </span>
-                  </label>
-                ))}
+
+                <label className="block text-xs font-medium text-[#625e58]">
+                  Current Password
+                  <span className="relative mt-1 block">
+                    <input
+                      required
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(event) =>
+                        setCurrentPassword(event.target.value)
+                      }
+                      className="w-full rounded-lg border border-[#c2c9b5] px-3 py-2.5 pr-11 text-sm text-[#191c1d] outline-none focus:border-[#3c6a00]"
+                    />
+                    <button
+                      type="button"
+                      aria-label={
+                        showCurrentPassword ? "Hide password" : "Show password"
+                      }
+                      onClick={() =>
+                        setShowCurrentPassword((visible) => !visible)
+                      }
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[#625e58] hover:bg-[#f1f4eb]"
+                    >
+                      {showCurrentPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </span>
+                </label>
+
+                <label className="block text-xs font-medium text-[#625e58]">
+                  New Password
+                  <span className="relative mt-1 block">
+                    <input
+                      required
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                      className="w-full rounded-lg border border-[#c2c9b5] px-3 py-2.5 pr-11 text-sm text-[#191c1d] outline-none focus:border-[#3c6a00]"
+                    />
+                    <button
+                      type="button"
+                      aria-label={
+                        showNewPassword ? "Hide password" : "Show password"
+                      }
+                      onClick={() => setShowNewPassword((visible) => !visible)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[#625e58] hover:bg-[#f1f4eb]"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </span>
+                </label>
+
+                <label className="block text-xs font-medium text-[#625e58]">
+                  Confirm Password
+                  <span className="relative mt-1 block">
+                    <input
+                      required
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(event) =>
+                        setConfirmPassword(event.target.value)
+                      }
+                      className="w-full rounded-lg border border-[#c2c9b5] px-3 py-2.5 pr-11 text-sm text-[#191c1d] outline-none focus:border-[#3c6a00]"
+                    />
+                    <button
+                      type="button"
+                      aria-label={
+                        showConfirmPassword ? "Hide password" : "Show password"
+                      }
+                      onClick={() =>
+                        setShowConfirmPassword((visible) => !visible)
+                      }
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[#625e58] hover:bg-[#f1f4eb]"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </span>
+                </label>
+
                 {passwordError && (
                   <p className="text-sm text-[#ba1a1a]">{passwordError}</p>
                 )}

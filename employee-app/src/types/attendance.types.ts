@@ -18,3 +18,15 @@ export type SelfAttendance = {
     absent_days: number;
   };
 };
+
+export type ManualAttendanceResponse = {
+  att_id: number;
+  emp_id: number;
+  att_date: string;
+  check_in: string | null;
+  check_out: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  action: "check_in" | "check_out";
+};

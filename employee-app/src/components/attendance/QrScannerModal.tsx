@@ -71,6 +71,20 @@ const formatAttendanceTime = (timeValue: string) => {
   });
 };
 
+const extractQrToken = (value: string) => {
+  try {
+    const url = new URL(value);
+
+    if (url.origin !== "https://attendance.justbooksalon.com") {
+      return null;
+    }
+
+    return url.searchParams.get("token");
+  } catch {
+    return value.trim();
+  }
+};
+
 function QrScannerModal({
   isOpen,
   onClose,
@@ -224,22 +238,67 @@ function QrScannerModal({
             return;
           }
 
-          await handleScan(decodedText);
+          const qrToken = extractQrToken(decodedText);
+
+          if (!qrToken) {
+            console.error("Invalid QR code:", qrToken);
+            return;
+          }
+
+          console.log("Scanned QR:", decodedText);
+          console.log("Extracted token:", qrToken);
+
+          await handleScan(qrToken);
         },
         () => {},
       );
     } catch (error) {
       console.error("Camera error:", error);
 
-      // if (session === scannerSessionRef.current) {
-      //   setCameraError(
-      //     "Unable to access the camera. Please allow camera permission and try again.",
-      //   );
-      // }
-      if (session === scannerSessionRef.current) {
-        const message = error instanceof Error ? error.message : String(error);
+      if (session !== scannerSessionRef.current) {
+        return;
+      }
 
-        setCameraError(`Camera error: ${message}`);
+      if (error instanceof DOMException) {
+        switch (error.name) {
+          case "NotAllowedError":
+          case "PermissionDeniedError":
+            setCameraError(
+              "Camera access is required. Please allow camera permission in your browser and try again.",
+            );
+            break;
+
+          case "NotFoundError":
+            setCameraError("No camera was found on this device.");
+            break;
+
+          case "NotReadableError":
+            setCameraError(
+              "Your camera is currently being used by another application. Please close it and try again.",
+            );
+            break;
+
+          case "OverconstrainedError":
+            setCameraError(
+              "The requested camera is not available. Please try again.",
+            );
+            break;
+
+          case "SecurityError":
+            setCameraError(
+              "Camera access is blocked for security reasons. Please check your browser permissions.",
+            );
+            break;
+
+          default:
+            setCameraError(
+              "Unable to access the camera. Please check your camera permissions and try again.",
+            );
+        }
+      } else {
+        setCameraError(
+          "Unable to access the camera. Please check your camera permissions and try again.",
+        );
       }
     }
   }, [handleScan, stopScanner, isOpen]);
@@ -326,7 +385,17 @@ function QrScannerModal({
         <div id="qr-reader" className="mb-4 overflow-hidden rounded-lg" />
 
         {cameraError && (
-          <p className="mb-3 text-sm text-[#ba1a1a]">{cameraError}</p>
+          <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+            <p className="text-sm font-medium text-[#ba1a1a]">{cameraError}</p>
+
+            <button
+              type="button"
+              onClick={handleTryAgain}
+              className="mt-3 rounded-lg bg-[#5f950d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4d7d08]"
+            >
+              Try Again
+            </button>
+          </div>
         )}
 
         {saving && (

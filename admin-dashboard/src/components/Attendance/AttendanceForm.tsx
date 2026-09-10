@@ -44,7 +44,7 @@ function AttendanceForm({ attendance, onClose, onSaved }: AttendanceFormProps) {
       att_date: String(form.get("date")),
       check_in: String(form.get("checkIn")),
       check_out: String(form.get("checkOut") || ""),
-      status: form.get("status") as CreateAttendanceRequest["status"],
+      // status: form.get("status") as CreateAttendanceRequest["status"],
     };
 
     try {
@@ -108,17 +108,17 @@ function AttendanceForm({ attendance, onClose, onSaved }: AttendanceFormProps) {
       defaultValue: attendance?.check_out?.slice(0, 5) ?? "",
       icon: <Clock3 size={15} />,
     },
-    {
-      name: "status",
-      label: "Status",
-      type: "select",
-      required: true,
-      defaultValue: attendance?.status ?? "Present",
-      options: ["Present", "Late", "Absent", "On Leave"].map((value) => ({
-        label: value,
-        value,
-      })),
-    },
+    // {
+    //   name: "status",
+    //   label: "Status",
+    //   type: "select",
+    //   required: true,
+    //   defaultValue: attendance?.status ?? "Present",
+    //   options: ["Present", "Late", "Absent", "On Leave"].map((value) => ({
+    //     label: value,
+    //     value,
+    //   })),
+    // },
   ];
 
   return (

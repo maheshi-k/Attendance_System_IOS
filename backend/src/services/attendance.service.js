@@ -121,12 +121,6 @@ if (!attendance) {
     )
   `);
 
-  console.log("========== ATTENDANCE DEBUG ==========");
-  console.log("CLIENT DATE:", client_date);
-  console.log("CLIENT TIME:", client_time);
-  console.log("INSERTED RECORD:", result.recordset[0]);
-  console.log("======================================");
-
   return {
     action: "CHECK_IN",
     attendance: result.recordset[0],
@@ -359,20 +353,130 @@ export const getSelfAttendanceView = async (emp_id) => {
   };
 };
 
+// export const addManualAttendance = async ({
+//   emp_id,
+//   att_date,
+//   check_in,
+//   check_out,
+//   status,
+// }) => {
+//   const request = new sql.Request();
+//   request.input("emp_id", sql.Int, emp_id);
+//   request.input("att_date", sql.Date, att_date);
+//   request.input("check_in", sql.VarChar(8), check_in);
+//   request.input("check_out", sql.VarChar(8), check_out || null);
+//   request.input("status", sql.VarChar(20), status);
+
+//   const result = await request.query(`
+//     INSERT INTO ATT_Attendance (
+//       emp_id,
+//       att_date,
+//       check_in,
+//       check_out,
+//       status
+//     )
+//     OUTPUT
+//       INSERTED.att_id,
+//       INSERTED.emp_id,
+//       INSERTED.att_date,
+//       INSERTED.check_in,
+//       INSERTED.check_out,
+//       INSERTED.status,
+//       INSERTED.created_at,
+//       INSERTED.updated_at
+//     VALUES (
+//       @emp_id,
+//       @att_date,
+//       CONVERT(TIME, @check_in),
+//       CONVERT(TIME, @check_out),
+//       @status
+//     )
+//   `);
+
+//   return result.recordset[0];
+// };
+
 export const addManualAttendance = async ({
   emp_id,
   att_date,
   check_in,
   check_out,
-  status,
+  // status,
 }) => {
+
+  const {
+    WORK_START_TIME,
+    GRACE_PERIOD_MINUTES,
+    MIN_CHECKOUT_HOURS,
+  } = ATTENDANCE_CONFIG;
+
+  // 1. Check employee
+  const employeeResult = await sql.query`
+    SELECT emp_id, is_active
+    FROM EMP_Emp
+    WHERE emp_id = ${emp_id}
+  `;
+
+  const employee = employeeResult.recordset[0];
+
+  if (!employee) {
+    throw new Error("EMPLOYEE_NOT_FOUND");
+  }
+
+  if (!employee.is_active) {
+    throw new Error("EMPLOYEE_INACTIVE");
+  }
+
+  //check existing attendance for this employee
+
+const existingResult = await sql.query`
+    SELECT
+      att_id,
+      emp_id,
+      att_date,
+      check_in,
+      check_out,
+      status
+    FROM ATT_Attendance
+    WHERE emp_id = ${emp_id}
+      AND att_date = CONVERT(date, ${att_date}, 23)
+  `;
+
+  const existing = existingResult.recordset[0];
+
+  if (existing) {
+    throw new Error("ATTENDANCE_EXISTS");
+  }
+
+  // 3. If checkout exists, validate minimum working hours
+  if (check_out) {
+    const durationResult = await sql.query`
+      SELECT DATEDIFF(
+        MINUTE,
+        CAST(${check_in} AS TIME),
+        CAST(${check_out} AS TIME)
+      ) AS minutes_elapsed
+    `;
+
+    const minutesElapsed = durationResult.recordset[0].minutes_elapsed;
+
+    if (minutesElapsed < MIN_CHECKOUT_HOURS * 60) {
+      throw new Error("MIN_CHECKOUT_TIME");
+    }
+  }
+
   const request = new sql.Request();
+
   request.input("emp_id", sql.Int, emp_id);
   request.input("att_date", sql.Date, att_date);
   request.input("check_in", sql.VarChar(8), check_in);
   request.input("check_out", sql.VarChar(8), check_out || null);
-  request.input("status", sql.VarChar(20), status);
+  request.input("grace_period", sql.Int, GRACE_PERIOD_MINUTES);
+  request.input("work_start_time", sql.VarChar(8), WORK_START_TIME);
+  // request.input("status", sql.VarChar(20), status);
+  
 
+  // Create new attendance
   const result = await request.query(`
     INSERT INTO ATT_Attendance (
       emp_id,
@@ -385,21 +489,181 @@ export const addManualAttendance = async ({
       INSERTED.att_id,
       INSERTED.emp_id,
       INSERTED.att_date,
-      INSERTED.check_in,
-      INSERTED.check_out,
+      CONVERT(varchar(8), INSERTED.check_in, 108) AS check_in,
+      CONVERT(varchar(8), INSERTED.check_out, 108) AS check_out,
       INSERTED.status,
       INSERTED.created_at,
       INSERTED.updated_at
     VALUES (
       @emp_id,
       @att_date,
-      CONVERT(TIME, @check_in),
-      CONVERT(TIME, @check_out),
-      @status
+      CAST(@check_in AS TIME),
+      CASE
+        WHEN @check_out IS NULL THEN NULL
+        ELSE CAST(@check_out AS TIME)
+      END,
+      CASE
+        WHEN CAST(@check_in AS TIME) >
+             DATEADD(
+               MINUTE,
+               @grace_period,
+               CAST(@work_start_time AS TIME)
+             )
+        THEN 'Late'
+        ELSE 'Present'
+      END
     )
   `);
 
   return result.recordset[0];
+};
+
+export const addManualAttendanceByEmp = async ({
+  emp_id,
+  att_date,
+  attendance_time,
+}) => {
+  const {
+    WORK_START_TIME,
+    GRACE_PERIOD_MINUTES,
+    MIN_CHECKOUT_HOURS,
+  } = ATTENDANCE_CONFIG;
+
+  // 1. Check employee
+  const employeeResult = await sql.query`
+    SELECT emp_id, is_active
+    FROM EMP_Emp
+    WHERE emp_id = ${emp_id}
+  `;
+
+  const employee = employeeResult.recordset[0];
+
+  if (!employee) {
+    throw new Error("EMPLOYEE_NOT_FOUND");
+  }
+
+  if (!employee.is_active) {
+    throw new Error("EMPLOYEE_INACTIVE");
+  }
+
+  // 2. Find today's attendance
+  const existingResult = await sql.query`
+    SELECT
+      att_id,
+      emp_id,
+      att_date,
+      check_in,
+      check_out,
+      status
+    FROM ATT_Attendance
+    WHERE emp_id = ${emp_id}
+      AND att_date = CONVERT(date, ${att_date}, 23)
+  `;
+
+  const existing = existingResult.recordset[0];
+
+  // =====================================================
+  // FIRST ACTION → CHECK-IN
+  // =====================================================
+
+  if (!existing) {
+    const request = new sql.Request();
+
+    request.input("emp_id", sql.Int, emp_id);
+    request.input("att_date", sql.Date, att_date);
+    request.input("check_in", sql.VarChar(8), attendance_time);
+    request.input("grace_period", sql.Int, GRACE_PERIOD_MINUTES);
+    request.input("work_start_time", sql.VarChar(8), WORK_START_TIME);
+
+    const result = await request.query(`
+      INSERT INTO ATT_Attendance (
+        emp_id,
+        att_date,
+        check_in,
+        check_out,
+        status
+      )
+      OUTPUT
+        INSERTED.att_id,
+        INSERTED.emp_id,
+        INSERTED.att_date,
+        CONVERT(varchar(8), INSERTED.check_in, 108) AS check_in,
+        CONVERT(varchar(8), INSERTED.check_out, 108) AS check_out,
+        INSERTED.status,
+        INSERTED.created_at,
+        INSERTED.updated_at
+      VALUES (
+        @emp_id,
+        @att_date,
+        CAST(@check_in AS TIME),
+        NULL,
+        CASE
+          WHEN CAST(@check_in AS TIME) >
+               DATEADD(
+                 MINUTE,
+                 @grace_period,
+                 CAST(@work_start_time AS TIME)
+               )
+          THEN 'Late'
+          ELSE 'Present'
+        END
+      )
+    `);
+
+    return {
+      action: "check_in",
+      ...result.recordset[0],
+    };
+  }
+
+
+  if (existing.check_in && existing.check_out) {
+    throw new Error("ATTENDANCE_COMPLETED");
+  }
+
+  if (existing.check_in && !existing.check_out) {
+    const durationResult = await sql.query`
+      SELECT DATEDIFF(
+        MINUTE,
+        CAST(${existing.check_in} AS TIME),
+        CAST(${attendance_time} AS TIME)
+      ) AS minutes_elapsed
+    `;
+
+    const minutesElapsed =
+      durationResult.recordset[0].minutes_elapsed;
+
+    if (minutesElapsed < MIN_CHECKOUT_HOURS * 60) {
+      throw new Error("MIN_CHECKOUT_TIME");
+    }
+
+    const request = new sql.Request();
+
+    request.input("att_id", sql.Int, existing.att_id);
+    request.input("check_out", sql.VarChar(8), attendance_time);
+
+    const result = await request.query(`
+      UPDATE ATT_Attendance
+      SET
+        check_out = CAST(@check_out AS TIME),
+        updated_at = GETDATE()
+      OUTPUT
+        INSERTED.att_id,
+        INSERTED.emp_id,
+        INSERTED.att_date,
+        CONVERT(varchar(8), INSERTED.check_in, 108) AS check_in,
+        CONVERT(varchar(8), INSERTED.check_out, 108) AS check_out,
+        INSERTED.status,
+        INSERTED.created_at,
+        INSERTED.updated_at
+      WHERE att_id = @att_id
+    `);
+
+    return {
+      action: "check_out",
+      ...result.recordset[0],
+    };
+  }
 };
 
 export const getAttendanceByID = async (att_id) => {
@@ -442,31 +706,69 @@ export const updateManualAttendance = async ({
   att_date,
   check_in,
   check_out,
-  status,
 }) => {
+  const {
+    WORK_START_TIME,
+    GRACE_PERIOD_MINUTES,
+    MIN_CHECKOUT_HOURS,
+  } = ATTENDANCE_CONFIG;
+
+  // 1. Validate check-out duration
+  if (check_out) {
+    const durationResult = await sql.query`
+      SELECT DATEDIFF(
+        MINUTE,
+        CAST(${check_in} AS TIME),
+        CAST(${check_out} AS TIME)
+      ) AS minutes_elapsed
+    `;
+
+    const minutesElapsed = durationResult.recordset[0].minutes_elapsed;
+
+    if (minutesElapsed < MIN_CHECKOUT_HOURS * 60) {
+      throw new Error("MIN_CHECKOUT_TIME");
+    }
+  }
+
+  // 2. Prepare request
   const request = new sql.Request();
+
   request.input("att_id", sql.Int, att_id);
   request.input("emp_id", sql.Int, emp_id);
   request.input("att_date", sql.Date, att_date);
   request.input("check_in", sql.VarChar(8), check_in);
   request.input("check_out", sql.VarChar(8), check_out || null);
-  request.input("status", sql.VarChar(20), status);
+  request.input("grace_period", sql.Int, GRACE_PERIOD_MINUTES);
+  request.input("work_start_time", sql.VarChar(8), WORK_START_TIME);
 
+  // 3. Calculate status in backend
   const result = await request.query(`
     UPDATE ATT_Attendance
     SET
       emp_id = @emp_id,
       att_date = @att_date,
-      check_in = CONVERT(TIME, @check_in),
-      check_out = CONVERT(TIME, @check_out),
-      status = @status,
+      check_in = CAST(@check_in AS TIME),
+      check_out = CASE
+        WHEN @check_out IS NULL THEN NULL
+        ELSE CAST(@check_out AS TIME)
+      END,
+      status = CASE
+        WHEN CAST(@check_in AS TIME) >
+             DATEADD(
+               MINUTE,
+               @grace_period,
+               CAST(@work_start_time AS TIME)
+             )
+        THEN 'Late'
+        ELSE 'Present'
+      END,
       updated_at = GETDATE()
     OUTPUT
       INSERTED.att_id,
       INSERTED.emp_id,
       INSERTED.att_date,
-      INSERTED.check_in,
-      INSERTED.check_out,
+      CONVERT(varchar(8), INSERTED.check_in, 108) AS check_in,
+      CONVERT(varchar(8), INSERTED.check_out, 108) AS check_out,
       INSERTED.status,
       INSERTED.created_at,
       INSERTED.updated_at

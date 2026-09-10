@@ -2,6 +2,7 @@ import sql from "mssql";
 import crypto from "crypto";
 
 export const createQrToken = async () => {
+  // Generate a secure random token
   const qrToken = crypto.randomBytes(32).toString("hex");
 
   const result = await sql.query`
@@ -19,5 +20,13 @@ export const createQrToken = async () => {
     )
   `;
 
-  return result.recordset[0];
+  const qr = result.recordset[0];
+
+  const qrUrl =
+    `https://attendance.justbooksalon.com/attendance/scan?token=${qr.qr_token}`;
+
+  return {
+    ...qr,
+    qr_url: qrUrl,
+  };
 };

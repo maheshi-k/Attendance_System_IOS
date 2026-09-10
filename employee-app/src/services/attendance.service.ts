@@ -1,6 +1,7 @@
 import type {
   EmployeeAttendanceRecord,
   SelfAttendance,
+  ManualAttendanceResponse,
 } from "../types/attendance.types";
 
 export const getSelfAttendance = async (): Promise<SelfAttendance> => {
@@ -37,6 +38,58 @@ function formatLocalYYYYMMDDHHmmss(date = new Date()) {
 
   return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
 }
+
+export const getManualAttendanceTime = () => {
+  const now = new Date();
+  const client_datetime = formatLocalYYYYMMDDHHmmss(now);
+
+  const [client_date, client_time] = client_datetime.split(" ");
+
+  return {
+    client_date,
+    client_time,
+    client_datetime,
+  };
+};
+
+export const addManualAttendance = async ({
+  client_date,
+  client_time,
+}: {
+  client_date: string;
+  client_time: string;
+}) => {
+  const response = await fetch(
+    `${import.meta.env.VITE_BASE_URL ?? "/api"}/attendance/manual/add`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${
+          localStorage.getItem("attendance_token") ?? ""
+        }`,
+      },
+      body: JSON.stringify({
+        att_date: client_date,
+        attendance_time: client_time,
+      }),
+    },
+  );
+
+  const result = (await response.json()) as {
+    data?: ManualAttendanceResponse;
+    message?: string;
+  };
+
+  if (!response.ok || !result.data) {
+    throw new Error(result.message ?? "Unable to mark attendance");
+  }
+
+  return {
+    data: result.data,
+    client_time,
+  };
+};
 
 export const checkAttendance = async (qr_token: string) => {
   const now = new Date();
@@ -80,4 +133,9 @@ export const checkAttendance = async (qr_token: string) => {
     data: result.data,
     client_time,
   };
+};
+
+export type ManualAttendancePayload = {
+  att_date: string;
+  attendance_time: string;
 };

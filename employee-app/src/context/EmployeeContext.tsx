@@ -19,19 +19,7 @@ const EmployeeContext = createContext<EmployeeContextType | undefined>(
 );
 
 export function EmployeeProvider({ children }: { children: ReactNode }) {
-  const [employee, setEmployee] = useState<MyProfile | null>(() => {
-    const storedEmployee = localStorage.getItem("attendance_employee");
-
-    if (!storedEmployee) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(storedEmployee);
-    } catch {
-      return null;
-    }
-  });
+  const [employee, setEmployee] = useState<MyProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

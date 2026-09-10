@@ -1,5 +1,5 @@
 import express from "express";
-import { markAttendanceController, getAttendanceController, getSelfAttendanceController, getAttendanceByEmpIDController, addManualAttendanceController, getAttendanceByIDController, updateManualAttendanceController, getSelfAttendanceViewController} from "../controllers/attendance.controller.js";
+import { markAttendanceController, getAttendanceController, getSelfAttendanceController, getAttendanceByEmpIDController, addManualAttendanceController, getAttendanceByIDController, updateManualAttendanceController, getSelfAttendanceViewController, addAttendanceByEmpController} from "../controllers/attendance.controller.js";
 import { authenticateToken } from '../middlewares/auth.middleware.js';
 import { requirePermission } from '../middlewares/permission.middleware.js';
 
@@ -10,6 +10,7 @@ router.get("/view",authenticateToken, requirePermission("ATTENDANCE_VIEW"), getA
 router.get("/self", authenticateToken, requirePermission("ATTENDANCE_SELF"), getSelfAttendanceController);
 router.get("/self/view", authenticateToken, requirePermission("ATTENDANCE_SELF"), getSelfAttendanceViewController);
 router.post("/manual", authenticateToken, requirePermission("ATTENDANCE_MANAGE"), addManualAttendanceController);
+router.post("/manual/add", authenticateToken, requirePermission("ATTENDANCE_SELF"), addAttendanceByEmpController);
 router.get("/record/:id", authenticateToken, requirePermission("ATTENDANCE_VIEW"), getAttendanceByIDController);
 router.put("/:id", authenticateToken, requirePermission("ATTENDANCE_MANAGE"), updateManualAttendanceController);
 router.get("/:id", authenticateToken, requirePermission("ATTENDANCE_MANAGE"), getAttendanceByEmpIDController);

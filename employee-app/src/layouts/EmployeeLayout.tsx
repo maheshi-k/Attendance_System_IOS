@@ -21,7 +21,7 @@ export type EmployeeLayoutContext = {
 };
 
 function EmployeeLayout({ onLogout }: EmployeeLayoutProps) {
-  const { employee } = useEmployee();
+  const { employee, loading } = useEmployee();
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
@@ -59,7 +59,7 @@ function EmployeeLayout({ onLogout }: EmployeeLayoutProps) {
     <div className="relative m-2 min-h-screen bg-[#f8f9fa] text-[#191c1d]">
       <HomeHeader
         employeeName={employeeName}
-        profilePhoto={employee?.profile_photo}
+        profilePhoto={loading ? null : employee?.profile_photo}
         employeeRole={employee?.role_name}
         onLogout={onLogout}
       />

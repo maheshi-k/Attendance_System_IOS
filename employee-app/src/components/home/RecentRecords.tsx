@@ -1,5 +1,9 @@
 import lateAsset from "../../assets/lateAsset.svg";
 import presentAsset from "../../assets/presentAsset.svg";
+import {
+  // getStatusBadgeColor,
+  getStatusTextColor,
+} from "../../utils/attendance.utils";
 
 import { useNavigate } from "react-router-dom";
 
@@ -80,7 +84,7 @@ function RecentRecords({ records }: RecentRecordsProps) {
                   {record.hours}
                 </p>
                 <p
-                  className={`text-xs font-bold leading-[18px] ${record.active ? "text-[#7cb342]" : "text-[#625e58]"}`}
+                  className={`text-xs font-bold leading-[18px] ${getStatusTextColor(record.status)}`}
                 >
                   {record.status}
                 </p>
