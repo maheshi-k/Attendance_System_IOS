@@ -3,13 +3,14 @@ import type {
   SelfAttendance,
   ManualAttendanceResponse,
 } from "../types/attendance.types";
+import { getAuthToken } from "../utils/authStorage";
 
 export const getSelfAttendance = async (): Promise<SelfAttendance> => {
   const response = await fetch(
     `${import.meta.env.VITE_BASE_URL ?? "/api"}/attendance/self`,
     {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("attendance_token") ?? ""}`,
+        Authorization: `Bearer ${getAuthToken() ?? ""}`,
       },
     },
   );
@@ -65,9 +66,7 @@ export const addManualAttendance = async ({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${
-          localStorage.getItem("attendance_token") ?? ""
-        }`,
+        Authorization: `Bearer ${getAuthToken() ?? ""}`,
       },
       body: JSON.stringify({
         att_date: client_date,
@@ -97,9 +96,9 @@ export const checkAttendance = async (qr_token: string) => {
 
   const [client_date, client_time] = client_datetime.split(" ");
 
-  console.log("LOCAL DATETIME:", client_datetime);
-  console.log("LOCAL DATE:", client_date);
-  console.log("LOCAL TIME:", client_time);
+  // console.log("LOCAL DATETIME:", client_datetime);
+  // console.log("LOCAL DATE:", client_date);
+  // console.log("LOCAL TIME:", client_time);
 
   const response = await fetch(
     `${import.meta.env.VITE_BASE_URL ?? "/api"}/attendance/check`,
@@ -107,9 +106,7 @@ export const checkAttendance = async (qr_token: string) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${
-          localStorage.getItem("attendance_token") ?? ""
-        }`,
+        Authorization: `Bearer ${getAuthToken() ?? ""}`,
       },
       body: JSON.stringify({
         qr_token,

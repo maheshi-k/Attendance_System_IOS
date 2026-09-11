@@ -24,6 +24,8 @@ export const createQrToken = async () => {
 
   const qrUrl =
     `https://attendance.justbooksalon.com/attendance/scan?token=${qr.qr_token}`;
+  //  const qrUrl =
+  //   `http://192.168.1.3:5174/attendance/scan?token=${qr.qr_token}`;
 
   return {
     ...qr,

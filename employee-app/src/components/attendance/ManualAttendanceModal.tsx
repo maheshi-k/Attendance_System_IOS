@@ -20,7 +20,7 @@ function ManualAttendanceModal({
   onClose,
   onSuccess,
 }: ManualAttendanceModalProps) {
-  const { client_date, client_time, client_datetime } = attendanceTime;
+  const { client_date, client_time } = attendanceTime; //client_datetime
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");

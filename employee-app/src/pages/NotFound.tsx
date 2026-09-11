@@ -28,7 +28,7 @@ function NotFound() {
 
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 rounded-lg bg-[var(--secondary)] px-5 py-2.5 text-white transition hover:opacity-90"
+          className="flex items-center gap-2 rounded-lg bg-[var(--secondary)] border border-gray-300 px-5 py-2.5 text-[var(--text-primary)] transition hover:opacity-90"
         >
           <Home size={18} />
           Dashboard

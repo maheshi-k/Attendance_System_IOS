@@ -7,6 +7,7 @@ import {
 } from "react";
 import { getMyProfile } from "../services/employee.service";
 import type { MyProfile } from "../types/employee.types";
+import { useAuth } from "./AuthContext";
 
 type EmployeeContextType = {
   employee: MyProfile | null;
@@ -19,37 +20,51 @@ const EmployeeContext = createContext<EmployeeContextType | undefined>(
 );
 
 export function EmployeeProvider({ children }: { children: ReactNode }) {
-  const [employee, setEmployee] = useState<MyProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { employee: authEmployee, isAuthenticated } = useAuth();
+
+  const [employee, setEmployee] = useState<MyProfile | null>(
+    authEmployee as MyProfile | null,
+  );
+
+  const [loading, setLoading] = useState(!authEmployee);
 
   useEffect(() => {
-    const loadProfile = () => {
-      if (!localStorage.getItem("attendance_token")) {
-        setEmployee(null);
-        setLoading(false);
-        return;
-      }
+    if (!isAuthenticated) {
+      setEmployee(null);
+      setLoading(false);
+      return;
+    }
 
+    if (authEmployee) {
+      setEmployee(authEmployee as MyProfile);
+      setLoading(false);
+    } else {
       setLoading(true);
-      getMyProfile()
-        .then((data) => {
-          setEmployee(data);
-        })
-        .catch((error) => {
-          console.error("Failed to load employee profile:", error);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    };
+    }
 
-    loadProfile();
-    window.addEventListener("auth:change", loadProfile);
+    let cancelled = false;
+
+    getMyProfile()
+      .then((data) => {
+        if (!cancelled) {
+          setEmployee(data);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error("Failed to load employee profile:", error);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
 
     return () => {
-      window.removeEventListener("auth:change", loadProfile);
+      cancelled = true;
     };
-  }, []);
+  }, [isAuthenticated, authEmployee]);
 
   return (
     <EmployeeContext.Provider value={{ employee, setEmployee, loading }}>

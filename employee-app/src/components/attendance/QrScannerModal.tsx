@@ -6,6 +6,7 @@ import {
 } from "../../services/attendance.service";
 import { AttendanceSuccessPopup } from "../common/AttendanceSuccessPopup";
 import { AttendanceErrorPopup } from "../common/AttendanceErrorPopup";
+import { useAuth } from "../../context/AuthContext";
 
 type QrScannerModalProps = {
   isOpen: boolean;
@@ -97,6 +98,7 @@ function QrScannerModal({
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannedRef = useRef(false);
   const scannerSessionRef = useRef(0);
+  const { isAuthenticated } = useAuth();
 
   const stopScanner = useCallback(async () => {
     const scanner = scannerRef.current;
@@ -123,6 +125,10 @@ function QrScannerModal({
   const handleScan = useCallback(
     async (qrToken: string) => {
       if (!qrToken.trim() || scannedRef.current) {
+        return;
+      }
+
+      if (!isAuthenticated) {
         return;
       }
 
@@ -197,7 +203,7 @@ function QrScannerModal({
         }
       }
     },
-    [onAttendanceUpdated, stopScanner],
+    [onAttendanceUpdated, stopScanner, isAuthenticated],
   );
 
   const startScanner = useCallback(async () => {
@@ -245,8 +251,8 @@ function QrScannerModal({
             return;
           }
 
-          console.log("Scanned QR:", decodedText);
-          console.log("Extracted token:", qrToken);
+          // console.log("Scanned QR:", decodedText);
+          // console.log("Extracted token:", qrToken);
 
           await handleScan(qrToken);
         },

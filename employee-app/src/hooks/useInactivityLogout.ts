@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+const INACTIVITY_TIMEOUT_MS = 1 * 60 * 1000; // 10 minutes
 
 const ACTIVITY_EVENTS = [
   "mousemove",

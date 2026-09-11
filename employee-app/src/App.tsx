@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { useCallback } from "react";
+import { useAuth } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 
 import LoginPage from "./components/auth/LoginPage";
@@ -9,35 +16,21 @@ import AttendanceHistory from "./pages/AttendanceHistory";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import EmployeeLayout from "./layouts/EmployeeLayout";
+import AttendanceScan from "./pages/AttendanceScan";
 import { useInactivityLogout } from "./hooks/useInactivityLogout";
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, logout } = useAuth();
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() =>
-    Boolean(localStorage.getItem("attendance_token")),
-  );
+  const handleLogout = useCallback(() => {
+    logout();
 
-  useEffect(() => {
-    const syncAuthState = () => {
-      setIsAuthenticated(Boolean(localStorage.getItem("attendance_token")));
-    };
-
-    window.addEventListener("auth:change", syncAuthState);
-
-    return () => {
-      window.removeEventListener("auth:change", syncAuthState);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("attendance_token");
-    localStorage.removeItem("attendance_employee");
-    localStorage.removeItem("attendance_permissions");
-
-    setIsAuthenticated(false);
-    navigate("/login", { replace: true });
-  };
+    navigate("/login", {
+      replace: true,
+    });
+  }, [logout, navigate]);
 
   useInactivityLogout(isAuthenticated, handleLogout);
 
@@ -48,9 +41,18 @@ function App() {
         <Route
           path="/login"
           element={
-            isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />
+            isAuthenticated ? (
+              <Navigate
+                to={new URLSearchParams(location.search).get("returnTo") || "/"}
+                replace
+              />
+            ) : (
+              <LoginPage />
+            )
           }
         />
+
+        <Route path="/attendance/scan" element={<AttendanceScan />} />
 
         {/* Authenticated pages */}
         {isAuthenticated && (

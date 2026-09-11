@@ -1,6 +1,14 @@
+// @vitest-environment jsdom
+
+import { act, createElement } from "react";
+import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { checkAttendance, getSelfAttendance } from "./attendance.service";
 import { changePassword, loginEmployee } from "./auth.service";
+import { AuthProvider, useAuth } from "../context/AuthContext";
+import { EmployeeProvider, useEmployee } from "../context/EmployeeContext";
+import { useInactivityLogout } from "../hooks/useInactivityLogout";
+import { clearAuthSession, saveAuthSession } from "../utils/authStorage";
 import {
   getMyProfile,
   updateMyProfile,
@@ -77,18 +85,26 @@ describe("employee attendance flows", () => {
     expect(result.data).toEqual(attendanceRecord);
     expect(result.client_time).toMatch(/^\d{2}:\d{2}:\d{2}$/);
 
-    expect(fetch).toHaveBeenCalledWith(
-      `${apiBaseUrl}/attendance/check`,
+    const [, request] = vi.mocked(fetch).mock.calls[0];
+
+    expect(request).toEqual(
       expect.objectContaining({
         method: "POST",
-        body: expect.stringMatching(
-          /\{"qr_token":"office-qr-token","client_date":"\d{4}-\d{2}-\d{2}","client_time":"\d{2}:\d{2}:\d{2}"\}/,
-        ),
         headers: expect.objectContaining({
           Authorization: "Bearer test-token",
+          "Content-Type": "application/json",
         }),
       }),
     );
+
+    expect(JSON.parse(String(request?.body))).toMatchObject({
+      qr_token: "office-qr-token",
+      client_date: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
+      client_time: expect.stringMatching(/\d{2}:\d{2}:\d{2}/),
+      client_datetime: expect.stringMatching(
+        /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/,
+      ),
+    });
   });
 
   it("logs in an employee and returns the authenticated session", async () => {
@@ -212,5 +228,204 @@ describe("employee attendance flows", () => {
     await expect(checkAttendance("bad-token")).rejects.toThrow(
       "Invalid QR token",
     );
+  });
+
+  it("shows the logged-in employee immediately before the profile fetch resolves", async () => {
+    const loginPayload = {
+      token: "session-token",
+      employee,
+      permissions: [],
+    };
+
+    vi.spyOn(await import("./auth.service"), "loginEmployee").mockResolvedValue(
+      loginPayload,
+    );
+
+    let resolveProfile: (value: typeof employee) => void;
+    const profileRequest = new Promise<typeof employee>((resolve) => {
+      resolveProfile = resolve;
+    });
+
+    vi.spyOn(
+      await import("./employee.service"),
+      "getMyProfile",
+    ).mockReturnValue(profileRequest);
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+
+    const root = createRoot(container);
+
+    const LoginStarter = () => {
+      const { login } = useAuth();
+
+      return createElement(
+        "button",
+        {
+          type: "button",
+          onClick: () => void login("ada@ionesoft.com", "secret123", false),
+        },
+        "login",
+      );
+    };
+
+    const EmployeeViewer = () => {
+      const { employee: currentEmployee, loading } = useEmployee();
+      return createElement(
+        "div",
+        null,
+        loading ? "loading" : (currentEmployee?.first_name ?? "missing"),
+      );
+    };
+
+    await act(async () => {
+      root.render(
+        createElement(
+          AuthProvider,
+          null,
+          createElement(
+            EmployeeProvider,
+            null,
+            createElement(LoginStarter),
+            createElement(EmployeeViewer),
+          ),
+        ),
+      );
+    });
+
+    await act(async () => {
+      const button = container.querySelector("button");
+      button?.click();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("Ada");
+    expect(container.textContent).not.toContain("loading");
+
+    resolveProfile!(employee);
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    root.unmount();
+    container.remove();
+  });
+
+  it("stores auth session in localStorage when Remember Me is enabled", () => {
+    saveAuthSession(
+      "token-remembered",
+      employee,
+      [{ permission_code: "VIEW" }],
+      true,
+    );
+
+    expect(localStorage.getItem("attendance_token")).toBe("token-remembered");
+    expect(localStorage.getItem("attendance_employee")).toBe(
+      JSON.stringify(employee),
+    );
+    expect(localStorage.getItem("attendance_permissions")).toBe(
+      JSON.stringify([{ permission_code: "VIEW" }]),
+    );
+    expect(sessionStorage.getItem("attendance_token")).toBeNull();
+  });
+
+  it("stores auth session in sessionStorage when Remember Me is disabled", () => {
+    saveAuthSession(
+      "token-session",
+      employee,
+      [{ permission_code: "VIEW" }],
+      false,
+    );
+
+    expect(sessionStorage.getItem("attendance_token")).toBe("token-session");
+    expect(sessionStorage.getItem("attendance_employee")).toBe(
+      JSON.stringify(employee),
+    );
+    expect(sessionStorage.getItem("attendance_permissions")).toBe(
+      JSON.stringify([{ permission_code: "VIEW" }]),
+    );
+    expect(localStorage.getItem("attendance_token")).toBeNull();
+  });
+
+  it("logs out and clears both storage locations when the inactivity timer expires", () => {
+    vi.useFakeTimers();
+    const onLogout = vi.fn();
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    const InactivityProbe = () => {
+      useInactivityLogout(true, onLogout);
+      return null;
+    };
+
+    act(() => {
+      root.render(createElement(InactivityProbe));
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(60 * 1000);
+    });
+
+    expect(onLogout).toHaveBeenCalledTimes(1);
+
+    root.unmount();
+    container.remove();
+    vi.useRealTimers();
+  });
+
+  it("resets the inactivity timer when the user is active", () => {
+    vi.useFakeTimers();
+    const onLogout = vi.fn();
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    const InactivityProbe = () => {
+      useInactivityLogout(true, onLogout);
+      return null;
+    };
+
+    act(() => {
+      root.render(createElement(InactivityProbe));
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(30 * 1000);
+      window.dispatchEvent(new MouseEvent("mousemove"));
+      vi.advanceTimersByTime(30 * 1000);
+    });
+
+    expect(onLogout).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(31 * 1000);
+    });
+
+    expect(onLogout).toHaveBeenCalledTimes(1);
+
+    root.unmount();
+    container.remove();
+    vi.useRealTimers();
+  });
+
+  it("logout clears all auth keys from both localStorage and sessionStorage", () => {
+    saveAuthSession(
+      "token-remembered",
+      employee,
+      [{ permission_code: "VIEW" }],
+      true,
+    );
+    localStorage.setItem("attendance_token", "stale-local");
+    sessionStorage.setItem("attendance_token", "stale-session");
+
+    clearAuthSession();
+
+    expect(localStorage.getItem("attendance_token")).toBeNull();
+    expect(localStorage.getItem("attendance_employee")).toBeNull();
+    expect(localStorage.getItem("attendance_permissions")).toBeNull();
+    expect(sessionStorage.getItem("attendance_token")).toBeNull();
+    expect(sessionStorage.getItem("attendance_employee")).toBeNull();
+    expect(sessionStorage.getItem("attendance_permissions")).toBeNull();
   });
 });

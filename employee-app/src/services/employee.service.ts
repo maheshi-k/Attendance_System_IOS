@@ -1,4 +1,5 @@
 import type { MyProfile } from "../types/employee.types";
+import { getAuthToken } from "../utils/authStorage";
 
 export const getMyProfile = async (): Promise<MyProfile> => {
   const response = await fetch(
@@ -6,9 +7,7 @@ export const getMyProfile = async (): Promise<MyProfile> => {
     {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${
-          localStorage.getItem("attendance_token") ?? ""
-        }`,
+        Authorization: `Bearer ${getAuthToken() ?? ""}`,
       },
     },
   );
@@ -62,7 +61,7 @@ export const updateMyProfile = async (
     {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("attendance_token") ?? ""}`,
+        Authorization: `Bearer ${getAuthToken() ?? ""}`,
       },
       body: formData,
     },

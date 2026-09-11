@@ -1,3 +1,5 @@
+import { getAuthToken } from "../utils/authStorage";
+
 export type LoginCredentials = {
   email_1: string;
   password: string;
@@ -43,7 +45,7 @@ export const changePassword = async (
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("attendance_token") ?? ""}`,
+        Authorization: `Bearer ${getAuthToken() ?? ""}`,
       },
       body: JSON.stringify({
         current_password: currentPassword,

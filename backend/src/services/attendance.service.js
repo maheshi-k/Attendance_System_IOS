@@ -161,8 +161,8 @@ if (minutesElapsed < MIN_CHECKOUT_HOURS * 60) {
       INSERTED.att_id,
       INSERTED.emp_id,
       INSERTED.att_date,
-      INSERTED.check_in,
-      INSERTED.check_out,
+      CONVERT(varchar(8), INSERTED.check_in, 108) AS check_in,
+      CONVERT(varchar(8), INSERTED.check_out, 108) AS check_out,
       INSERTED.status,
       INSERTED.created_at,
       INSERTED.updated_at

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import FormField from "./FormField";
-import { loginEmployee } from "../../services/auth.service";
+import { useAuth } from "../../context/AuthContext";
 import { Eye, LockKeyhole, Mail, LogIn } from "lucide-react";
 
 function LoginForm() {
@@ -9,6 +9,8 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const { login } = useAuth();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -16,21 +18,7 @@ function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      const authData = await loginEmployee({
-        email_1: email.trim(),
-        password,
-      });
-
-      localStorage.setItem("attendance_token", authData.token);
-      localStorage.setItem(
-        "attendance_employee",
-        JSON.stringify(authData.employee),
-      );
-      localStorage.setItem(
-        "attendance_permissions",
-        JSON.stringify(authData.permissions ?? []),
-      );
-      window.dispatchEvent(new Event("auth:change"));
+      await login(email, password, rememberMe);
     } catch (submitError) {
       if (submitError instanceof Error) {
         if (
@@ -86,6 +74,18 @@ function LoginForm() {
           Forgot Password?
         </button>
       </div> */}
+
+      <div className="flex items-center justify-between gap-4">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 accent-[#83bb49]"
+          />
+          Remember me
+        </label>
+      </div>
 
       {error && (
         <p className="text-sm text-[#b43f3f]" role="alert">
