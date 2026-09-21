@@ -1,5 +1,4 @@
-const logoAsset =
-  "https://www.figma.com/api/mcp/asset/81c34aee-0996-4374-a0d1-c14d9b2c86ee.png";
+import logoAsset from "../../assets/logo.png";
 
 function BrandHeader() {
   return (

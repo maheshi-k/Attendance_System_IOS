@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import FormField from "./FormField";
 import { useAuth } from "../../context/AuthContext";
 import { Eye, LockKeyhole, Mail, LogIn } from "lucide-react";
@@ -9,7 +10,6 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -18,7 +18,7 @@ function LoginForm() {
     setIsSubmitting(true);
 
     try {
-      await login(email, password, rememberMe);
+      await login(email, password, true);
     } catch (submitError) {
       if (submitError instanceof Error) {
         if (
@@ -69,22 +69,13 @@ function LoginForm() {
         }
       />
 
-      {/* <div className="flex items-center justify-between gap-4">
-        <button type="button" className="text-sm font-medium text-[#3c6a00]">
-          Forgot Password?
-        </button>
-      </div> */}
-
       <div className="flex items-center justify-between gap-4">
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
-          <input
-            type="checkbox"
-            checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-[#83bb49]"
-          />
-          Remember me
-        </label>
+        <Link
+          to="/forgot-password"
+          className="text-sm font-medium text-[#3c6a00] hover:underline"
+        >
+          Forgot Password?
+        </Link>
       </div>
 
       {error && (

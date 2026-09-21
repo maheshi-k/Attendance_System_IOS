@@ -58,7 +58,20 @@ export const getStatusTextColor = (status: string) => {
       return "text-[#5c9d10]";
 
     case "Late":
-      return "text-[#c7a909]";
+      return "text-[#d32222]";
+
+    default:
+      return "text-[#625e58]";
+  }
+};
+
+export const getStatusBadgeTextColor = (status: string) => {
+  switch (status) {
+    case "Present":
+      return "text-[#fdfdfd]";
+
+    case "Late":
+      return "text-[#d55050]";
 
     default:
       return "text-[#625e58]";

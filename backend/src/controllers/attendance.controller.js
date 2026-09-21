@@ -8,7 +8,7 @@ export const markAttendanceController = async (req, res) => {
     if (!qr_token) {
       return res.status(400).json({
         success: false,
-        message: "QR token is required",
+        message: "QR code is required",
       });
     }
 
@@ -53,13 +53,13 @@ export const markAttendanceController = async (req, res) => {
       case "INVALID_QR":
         return res.status(400).json({
           success: false,
-          message: "Invalid QR token",
+          message: "Invalid QR Code",
         });
 
       case "QR_INACTIVE":
         return res.status(400).json({
           success: false,
-          message: "QR token is inactive",
+          message: "QR code is inactive",
         });
 
       case "ATTENDANCE_COMPLETED":

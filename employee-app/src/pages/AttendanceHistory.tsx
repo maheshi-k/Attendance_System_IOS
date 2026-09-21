@@ -15,7 +15,7 @@ import {
   getDateKey,
   getMonthRange,
   getStatusBadgeColor,
-  getStatusTextColor,
+  getStatusBadgeTextColor,
   getWeekRange,
 } from "../utils/attendance.utils";
 import imgClock from "../assets/imgClock.svg";
@@ -213,7 +213,7 @@ function AttendanceRecordCard({
         <span
           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeColor(
             record.status,
-          )} ${getStatusTextColor(record.status)}`}
+          )} ${getStatusBadgeTextColor(record.status)}`}
         >
           {record.status}
         </span>

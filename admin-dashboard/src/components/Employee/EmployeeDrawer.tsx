@@ -2,7 +2,10 @@ import { CalendarDays, Mail, MapPin, Phone, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getEmployeeDesignationHistory } from "../../services/employee.service";
+import {
+  getAllSupervisors,
+  getEmployeeDesignationHistory,
+} from "../../services/employee.service";
 import type { DesignationHistory, EmployeeRecord } from "../../types/employee";
 import EmployeeStatusBadge from "./EmployeeStatusBadge";
 
@@ -21,6 +24,9 @@ function EmployeeDrawer({ employee, onClose }: EmployeeDrawerProps) {
   const [activeTab, setActiveTab] = useState<DrawerTab>("overview");
   const [history, setHistory] = useState<DesignationHistory[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [supervisors, setSupervisors] = useState<
+    Array<{ emp_id: number; first_name: string; last_name: string }>
+  >([]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -47,8 +53,28 @@ function EmployeeDrawer({ employee, onClose }: EmployeeDrawerProps) {
       }
     };
 
+    const loadSupervisors = async () => {
+      try {
+        const response = await getAllSupervisors();
+        setSupervisors(response.supervisors ?? []);
+      } catch (error) {
+        console.error("Failed to load supervisors:", error);
+      }
+    };
+
     loadHistory();
+    loadSupervisors();
   }, [employee.emp_id]);
+
+  const supervisorName =
+    employee.supervisor_id == null
+      ? "-"
+      : supervisors.find(
+            (supervisor) => supervisor.emp_id === employee.supervisor_id,
+          )
+        ? `${supervisors.find((supervisor) => supervisor.emp_id === employee.supervisor_id)?.first_name ?? ""} ${supervisors.find((supervisor) => supervisor.emp_id === employee.supervisor_id)?.last_name ?? ""}`.trim() ||
+          "-"
+        : "-";
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/20 backdrop-blur-[2px]">
@@ -178,11 +204,19 @@ function EmployeeDrawer({ employee, onClose }: EmployeeDrawerProps) {
                       {formatDate(employee.joining_date)}
                     </dd>
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <dt className="mb-2 uppercase text-[#817c78]">
                       Current Status
                     </dt>
                     <EmployeeStatusBadge status={employee.employment_status} />
+                  </div>
+                  <div>
+                    <dt className="uppercase text-[#817c78]">
+                      Supervisor Name
+                    </dt>
+                    <dd className="mt-1 font-medium text-[#1c1b1b]">
+                      {supervisorName}
+                    </dd>
                   </div>
                 </dl>
               </section>

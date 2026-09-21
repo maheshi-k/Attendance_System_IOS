@@ -7,7 +7,7 @@ export const authenticateToken = (req, res, next) => {
     if (!authHeader) {
       return res.status(401).json({
         success: false,
-        message: "Access token is required",
+        message: "Please log in to continue.",
       });
     }
 
@@ -16,7 +16,7 @@ export const authenticateToken = (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Invalid authorization header",
+        message: "Invalid authentication credentials.",
       });
     }
 
@@ -30,7 +30,7 @@ export const authenticateToken = (req, res, next) => {
 
     return res.status(401).json({
       success: false,
-      message: "Invalid or expired token",
+      message: "Your session has expired. Please log in again.",
     });
   }
 };

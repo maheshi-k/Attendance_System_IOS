@@ -2,6 +2,9 @@ import sql from "mssql";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
+import { generateResetToken, hashResetToken } from "../utils/passwordReset.js";
+import { sendPasswordResetEmail } from "./email.service.js";
+
 const profilePhotoDataUrl = (photo) => {
   if (!photo) {
     return null;
@@ -86,7 +89,7 @@ export const loginEmployee = async (email_1, password) => {
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+      expiresIn: process.env.JWT_EXPIRES_IN || "30d",
     }
   );
 
@@ -136,5 +139,108 @@ export const changeEmployeePassword = async (
     UPDATE EMP_Emp
     SET password_hash = ${passwordHash}, updated_at = GETDATE()
     WHERE emp_id = ${emp_id}
+  `;
+};
+
+export const forgotEmployeePassword = async (email) => {
+  const result = await sql.query`
+    SELECT
+      emp_id,
+      email_1,
+      first_name,
+      last_name,
+      is_active
+    FROM EMP_Emp
+    WHERE email_1 = ${email}
+  `;
+
+  const employee = result.recordset[0];
+
+  if (!employee || !employee.is_active) {
+    return;
+  }
+
+  const resetToken = generateResetToken();
+
+  // Store only hash in database.
+  const tokenHash = hashResetToken(resetToken);
+
+  // Token expires after 30 minutes.
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+  // Invalidate previous unused tokens.
+  await sql.query`
+    UPDATE AUTH_PasswordResetToken
+    SET used_at = GETDATE()
+    WHERE emp_id = ${employee.emp_id}
+      AND used_at IS NULL
+  `;
+
+  // Store new token hash.
+  await sql.query`
+    INSERT INTO AUTH_PasswordResetToken
+    (
+      emp_id,
+      token_hash,
+      expires_at
+    )
+    VALUES
+    (
+      ${employee.emp_id},
+      ${tokenHash},
+      ${expiresAt}
+    )
+  `;
+
+  const resetUrl =
+    `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+  // Send email here.
+  await sendPasswordResetEmail({
+    to: employee.email_1,
+    firstName: employee.first_name,
+    resetUrl,
+  });
+};
+
+export const resetEmployeePassword = async (token, newPassword) => {
+  const tokenHash = hashResetToken(token);
+
+  const result = await sql.query`
+    SELECT TOP 1
+      reset_id,
+      emp_id,
+      expires_at,
+      used_at
+    FROM AUTH_PasswordResetToken
+    WHERE token_hash = ${tokenHash}
+      AND used_at IS NULL
+      AND expires_at > GETDATE()
+    ORDER BY created_at DESC
+  `;
+
+  const resetRecord = result.recordset[0];
+
+  if (!resetRecord) {
+    throw new Error("INVALID_RESET_TOKEN");
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  // Update password.
+  await sql.query`
+    UPDATE EMP_Emp
+    SET
+      password_hash = ${passwordHash},
+      updated_at = GETDATE()
+    WHERE emp_id = ${resetRecord.emp_id}
+      AND is_active = 1
+  `;
+
+  // Make reset token single-use.
+  await sql.query`
+    UPDATE AUTH_PasswordResetToken
+    SET used_at = GETDATE()
+    WHERE reset_id = ${resetRecord.reset_id}
   `;
 };

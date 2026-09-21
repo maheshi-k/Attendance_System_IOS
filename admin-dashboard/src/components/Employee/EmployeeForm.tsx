@@ -30,6 +30,38 @@ type DesignationRow = {
   effectiveFrom?: string;
 };
 
+const formatValidationMessage = (message: string) => {
+  const fieldLabels: Record<string, string> = {
+    emp_code: "Employee ID",
+    first_name: "First Name",
+    last_name: "Last Name",
+    email_1: "Official Email",
+    email_2: "Personal Email",
+    mobile_no_1: "Mobile Number 1",
+    mobile_no_2: "Mobile Number 2",
+    nic: "NIC / National ID",
+    gender: "Gender",
+    address: "Address",
+    role_id: "Role",
+    supervisor_id: "Supervisor",
+    employment_status: "Employment Status",
+    joining_date: "Joining Date",
+    designation: "Designation",
+    password: "Password",
+  };
+
+  let formattedMessage = message;
+
+  Object.entries(fieldLabels).forEach(([field, label]) => {
+    formattedMessage = formattedMessage.replace(
+      new RegExp(`\\b${field}\\b`, "g"),
+      label,
+    );
+  });
+
+  return formattedMessage;
+};
+
 function AddEmployee() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -133,7 +165,7 @@ function AddEmployee() {
     employeeData.append("gender", form.get("gender") as string);
     employeeData.append("address", form.get("address") as string);
     employeeData.append("role_id", form.get("role") as string);
-    if (selectedRole === "1" && selectedSupervisor) {
+    if (selectedRole === "3" && selectedSupervisor) {
       employeeData.append("supervisor_id", selectedSupervisor);
     } else {
       employeeData.append("supervisor_id", "");
@@ -187,9 +219,17 @@ function AddEmployee() {
         const errors = error.response?.data?.errors;
 
         if (Array.isArray(errors) && errors.length > 0) {
-          errors.forEach((message: string) => {
-            toast.error(message);
-          });
+          toast.error(
+            <div>
+              <p className="font-semibold">Please check the following:</p>
+
+              <ul className="mt-1 list-disc pl-4">
+                {errors.map((message: string, index: number) => (
+                  <li key={index}>{formatValidationMessage(message)}</li>
+                ))}
+              </ul>
+            </div>,
+          );
         } else {
           toast.error(
             error.response?.data?.message || "Failed to save employee",
@@ -359,7 +399,7 @@ function AddEmployee() {
                 <label className="text-sm font-medium text-[var(--text-primary-light)]">
                   Supervisor
                   <select
-                    required
+                    // required
                     name="supervisor"
                     value={selectedSupervisor}
                     onChange={(event) =>
@@ -367,9 +407,11 @@ function AddEmployee() {
                     }
                     className="mt-1.5 h-10 w-full rounded-lg bg-[var(--surface-input)] px-3 text-sm text-[var(--text-primary-dark)] outline-none focus:ring-2 focus:ring-[var(--secondary-focus)]"
                   >
-                    <option value="" disabled>
+                    {/* <option value="" disabled>
                       Select supervisor
-                    </option>
+                    </option> */}
+                    <option value="">No Supervisor</option>
+
                     {supervisors.map((supervisor) => (
                       <option key={supervisor.emp_id} value={supervisor.emp_id}>
                         {supervisor.first_name} {supervisor.last_name} (

@@ -1,6 +1,14 @@
 import { MapPin, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AttendanceRecord } from "../../types/attendance";
+import {
+  statusClass,
+  groupAttendanceByDate,
+  formatAttendanceDate,
+  calculateHours,
+  isToday,
+  formatOpenHours,
+} from "../../utills/attendance.utills";
 
 type AttendanceTableProps = {
   records: AttendanceRecord[];
@@ -109,7 +117,9 @@ function AttendanceTable({
                       <td className="px-4 py-4 font-mono text-xs text-[#625e58]">
                         #{record.emp_code}
                       </td>
-                      <td className="px-4 py-4 font-semibold">
+                      <td
+                        className={`px-4 py-3 font-semibold ${record.status === "Late" ? "text-[#ba1a1a]" : ""}`}
+                      >
                         {record.check_in ? (
                           <>
                             <span>{record.check_in.slice(0, 5)}</span>
@@ -208,82 +218,6 @@ function AttendanceDateGroup({
       {children}
     </>
   );
-}
-
-function groupAttendanceByDate(records: AttendanceRecord[]) {
-  const groups = new Map<string, AttendanceRecord[]>();
-
-  const sortedRecords = [...records].sort((a, b) => {
-    const dateA = new Date(
-      `${a.att_date.slice(0, 10)}T${a.check_in ?? "00:00:00"}`,
-    ).getTime();
-
-    const dateB = new Date(
-      `${b.att_date.slice(0, 10)}T${b.check_in ?? "00:00:00"}`,
-    ).getTime();
-
-    return dateB - dateA;
-  });
-
-  sortedRecords.forEach((record) => {
-    const date = record.att_date.slice(0, 10);
-
-    const group = groups.get(date) ?? [];
-
-    group.push(record);
-
-    groups.set(date, group);
-  });
-
-  return Array.from(groups.entries());
-}
-
-function formatAttendanceDate(date: string) {
-  return new Date(`${date}T00:00:00`)
-    .toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    })
-    .toUpperCase();
-}
-
-function calculateHours(checkIn: string, checkOut: string) {
-  const [inHours, inMinutes] = checkIn.split(":").map(Number);
-  const [outHours, outMinutes] = checkOut.split(":").map(Number);
-  const minutes = Math.max(
-    0,
-    outHours * 60 + outMinutes - inHours * 60 - inMinutes,
-  );
-  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}h ${String(minutes % 60).padStart(2, "0")}m`;
-}
-
-function isToday(dateValue: string) {
-  const today = new Date();
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  return dateValue.slice(0, 10) === todayKey;
-}
-
-function formatOpenHours(checkIn: string, now: Date) {
-  const [checkInHours, checkInMinutes] = checkIn.split(":").map(Number);
-  const checkInTotal = checkInHours * 60 + checkInMinutes;
-  const workingStart = 9 * 60;
-  const workingEnd = 18 * 60;
-  const currentTotal = now.getHours() * 60 + now.getMinutes();
-  const elapsed = Math.max(
-    0,
-    Math.min(currentTotal, workingEnd) - Math.max(checkInTotal, workingStart),
-  );
-
-  return `${String(Math.floor(elapsed / 60)).padStart(2, "0")}h ${String(elapsed % 60).padStart(2, "0")}m`;
-}
-
-function statusClass(status: string) {
-  if (status === "Late") return "bg-[#fff0d1] text-[#a15c00]";
-  if (status === "Absent") return "bg-[#ffdad6] text-[#93000a]";
-  if (status === "On Leave") return "bg-[#e1e9f3] text-[#24527a]";
-  return "bg-[#e4f0db] text-[#416900]";
 }
 
 export default AttendanceTable;

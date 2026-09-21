@@ -135,9 +135,7 @@ function RecentAttendance({ records, loading }: RecentAttendanceProps) {
                     <span
                       className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${statusClass(record.status)}`}
                     >
-                      {record.status === "On Leave"
-                        ? "ON LEAVE"
-                        : record.status}
+                      {record.status}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-[12px] text-[var(--text-primary-light)]">

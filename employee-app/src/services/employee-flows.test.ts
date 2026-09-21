@@ -7,7 +7,6 @@ import { checkAttendance, getSelfAttendance } from "./attendance.service";
 import { changePassword, loginEmployee } from "./auth.service";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { EmployeeProvider, useEmployee } from "../context/EmployeeContext";
-import { useInactivityLogout } from "../hooks/useInactivityLogout";
 import { clearAuthSession, saveAuthSession } from "../utils/authStorage";
 import {
   getMyProfile,
@@ -345,68 +344,6 @@ describe("employee attendance flows", () => {
       JSON.stringify([{ permission_code: "VIEW" }]),
     );
     expect(localStorage.getItem("attendance_token")).toBeNull();
-  });
-
-  it("logs out and clears both storage locations when the inactivity timer expires", () => {
-    vi.useFakeTimers();
-    const onLogout = vi.fn();
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    const InactivityProbe = () => {
-      useInactivityLogout(true, onLogout);
-      return null;
-    };
-
-    act(() => {
-      root.render(createElement(InactivityProbe));
-    });
-
-    act(() => {
-      vi.advanceTimersByTime(60 * 1000);
-    });
-
-    expect(onLogout).toHaveBeenCalledTimes(1);
-
-    root.unmount();
-    container.remove();
-    vi.useRealTimers();
-  });
-
-  it("resets the inactivity timer when the user is active", () => {
-    vi.useFakeTimers();
-    const onLogout = vi.fn();
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    const InactivityProbe = () => {
-      useInactivityLogout(true, onLogout);
-      return null;
-    };
-
-    act(() => {
-      root.render(createElement(InactivityProbe));
-    });
-
-    act(() => {
-      vi.advanceTimersByTime(30 * 1000);
-      window.dispatchEvent(new MouseEvent("mousemove"));
-      vi.advanceTimersByTime(30 * 1000);
-    });
-
-    expect(onLogout).not.toHaveBeenCalled();
-
-    act(() => {
-      vi.advanceTimersByTime(31 * 1000);
-    });
-
-    expect(onLogout).toHaveBeenCalledTimes(1);
-
-    root.unmount();
-    container.remove();
-    vi.useRealTimers();
   });
 
   it("logout clears all auth keys from both localStorage and sessionStorage", () => {

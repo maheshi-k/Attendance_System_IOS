@@ -1,4 +1,9 @@
-import { changeEmployeePassword, loginEmployee } from "../services/auth.service.js";
+import {
+  changeEmployeePassword,
+  forgotEmployeePassword,
+  loginEmployee,
+  resetEmployeePassword,
+} from "../services/auth.service.js";
 
 export const login = async (req, res) => {
   try {
@@ -68,6 +73,75 @@ export const changePassword = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update password",
+    });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    await forgotEmployeePassword(email.trim());
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "If an account exists for this email, you will receive password reset instructions shortly.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to process password reset request",
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password reset request",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    await resetEmployeePassword(token, password);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    if (error.message === "INVALID_RESET_TOKEN") {
+      return res.status(400).json({
+        success: false,
+        message: "This password reset link is invalid or has expired.",
+      });
+    }
+
+    console.error("Reset password error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to reset password",
     });
   }
 };

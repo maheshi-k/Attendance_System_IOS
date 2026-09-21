@@ -6,7 +6,7 @@ export const createQR = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "QR token created successfully",
+      message: "QR code created successfully",
       data: qr,
     });
   } catch (error) {
@@ -14,7 +14,7 @@ export const createQR = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Failed to create QR token",
+      message: "Failed to create QR code",
     });
   }
 };

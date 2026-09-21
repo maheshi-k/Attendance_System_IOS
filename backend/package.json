@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "migrate": "node migrations/001_create_tables.js",
+    "migrate:password-reset": "node migrations/002_create_password_reset_tokens.js",
     "dev": "nodemon index.js",
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,7 +24,8 @@
     "msnodesqlv8": "^5.2.3",
     "mssql": "^12.7.0",
     "multer": "^2.2.0",
-    "mysql2": "^3.23.3"
+    "mysql2": "^3.23.3",
+    "resend": "^6.28.1"
   },
   "devDependencies": {
     "@types/mssql": "^12.3.0",

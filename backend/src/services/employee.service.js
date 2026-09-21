@@ -30,6 +30,7 @@ export const getAllEmployees = async () => {
       e.email_1,
       e.role_id,
       r.role_name,
+      e.supervisor_id,
       e.profile_photo,
       e.employment_status,
       e.mobile_no_1,

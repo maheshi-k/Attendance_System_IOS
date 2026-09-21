@@ -11,13 +11,14 @@ import { useAuth } from "./context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 
 import LoginPage from "./components/auth/LoginPage";
+import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./components/auth/ResetPasswordPage";
 import HomePage from "./components/home/HomePage";
 import AttendanceHistory from "./pages/AttendanceHistory";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import EmployeeLayout from "./layouts/EmployeeLayout";
 import AttendanceScan from "./pages/AttendanceScan";
-import { useInactivityLogout } from "./hooks/useInactivityLogout";
 
 function App() {
   const navigate = useNavigate();
@@ -31,8 +32,6 @@ function App() {
       replace: true,
     });
   }, [logout, navigate]);
-
-  useInactivityLogout(isAuthenticated, handleLogout);
 
   return (
     <>
@@ -51,6 +50,8 @@ function App() {
             )
           }
         />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route path="/attendance/scan" element={<AttendanceScan />} />
 

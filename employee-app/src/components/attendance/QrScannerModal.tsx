@@ -247,9 +247,21 @@ function QrScannerModal({
           const qrToken = extractQrToken(decodedText);
 
           if (!qrToken) {
-            console.error("Invalid QR code:", qrToken);
+            console.error("Invalid QR code:", decodedText);
+
+            scannedRef.current = true;
+            await stopScanner();
+
+            setPopupState({
+              isSuccess: false,
+              errorMessage: "Invalid QR code. Please scan the Valid QR code.",
+              canRetry: true,
+            });
+
             return;
           }
+
+          await handleScan(qrToken);
 
           // console.log("Scanned QR:", decodedText);
           // console.log("Extracted token:", qrToken);

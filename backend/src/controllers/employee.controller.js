@@ -13,7 +13,7 @@ export const getEmployee = async (req, res) => {
 
         res.status(500).json({
             success:false,
-            message:"Failed to fetch employees",
+            message:"Failed to load employees",
         })
     }
 }
@@ -42,7 +42,7 @@ export const addEmployee = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Failed to create employee",
+      message: "Failed to Add a employee",
     });
   }
 };
@@ -69,7 +69,7 @@ export const getEmployeeById = async (req, res) => {
 
         res.status(500).json({
             success:false,
-            message:"Failed to fetch employee",
+            message:"Failed to load employee details",
         })
     }
 }
@@ -153,7 +153,7 @@ export const updateEmployee = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Failed to update employee",
+      message: "Failed to update employee details",
     });
   }
 };

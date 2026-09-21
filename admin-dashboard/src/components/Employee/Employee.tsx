@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAllEmployees } from "../../services/employee.service";
 import type { EmployeeExportRow, EmployeeRecord } from "../../types/employee";
 import ExportData, { type ExportColumn } from "../common/ExportData";
+import ConfirmDialog from "../common/ConfirmDialog";
 
 import EmployeeTable from "./EmployeeTable";
 import EmployeePagination from "./EmployeePagination";
@@ -55,6 +56,10 @@ function Employee() {
     setSelectedDesignation,
     setCurrentPage,
     setRowsPerPage,
+    employeeToDeactivate,
+    deactivating,
+    requestEmployeeDeactivation,
+    cancelEmployeeDeactivation,
     deactivateEmployee,
   } = useEmployees(searchParams.get("search") ?? "");
 
@@ -72,6 +77,7 @@ function Employee() {
       gender: employee.gender,
       address: employee.address || "",
       role: employee.role_name,
+      supervisor_id: employee.supervisor_id || "",
       designation: employee.designation || "",
       employmentStatus: employee.employment_status,
       joiningDate: employee.joining_date,
@@ -112,7 +118,7 @@ function Employee() {
         employees={employees}
         loading={loading}
         error={error}
-        onDelete={deactivateEmployee}
+        onDelete={requestEmployeeDeactivation}
         onView={setSelectedEmployee}
       />
       <EmployeePagination
@@ -132,6 +138,20 @@ function Employee() {
           onClose={() => setSelectedEmployee(null)}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={Boolean(employeeToDeactivate)}
+        title="Deactivate employee"
+        message={
+          employeeToDeactivate
+            ? `Deactivate ${employeeToDeactivate.first_name} ${employeeToDeactivate.last_name}?`
+            : ""
+        }
+        confirmText="Deactivate"
+        onConfirm={deactivateEmployee}
+        onCancel={cancelEmployeeDeactivation}
+        loading={deactivating}
+      />
     </section>
   );
 }

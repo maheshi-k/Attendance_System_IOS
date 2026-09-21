@@ -1,7 +1,6 @@
 import { FileText, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import ExportData, { type ExportColumn } from "../common/ExportData";
 import EmployeePagination from "../Employee/EmployeePagination";
 import {
   getAttendance,
@@ -9,7 +8,6 @@ import {
 } from "../../services/attendance.service";
 import { getAllEmployees } from "../../services/employee.service";
 import type {
-  AttendanceExportRow,
   AttendanceDateRange,
   AttendanceRecord,
   AttendanceStatus,
@@ -23,110 +21,17 @@ import {
   OFFICE_START_HOUR,
   OFFICE_START_MINUTE,
 } from "../../config/app.config";
-
-const attendanceExportColumns: ExportColumn<AttendanceExportRow>[] = [
-  { header: "Employee", value: "employee" },
-  { header: "Employee ID", value: "employeeId" },
-  { header: "Date", value: "date" },
-  { header: "Check In", value: "checkIn" },
-  { header: "Check Out", value: "checkOut" },
-  { header: "Hours", value: "hours" },
-  { header: "Status", value: "status" },
-  { header: "Location", value: "location" },
-];
-
-const formatHours = (record: AttendanceRecord) => {
-  if (!record.check_in || !record.check_out) return "00h 00m";
-  const start = record.check_in.split(":").map(Number);
-  const end = record.check_out.split(":").map(Number);
-  const minutes = Math.max(0, end[0] * 60 + end[1] - start[0] * 60 - start[1]);
-  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}h ${String(minutes % 60).padStart(2, "0")}m`;
-};
-
-const getWorkedMinutes = (record: AttendanceRecord): number => {
-  if (!record.check_in || !record.check_out) return 0;
-
-  const startParts = record.check_in.split(":").map(Number);
-  const endParts = record.check_out.split(":").map(Number);
-
-  const startHour = startParts[0] ?? 0;
-  const startMinute = startParts[1] ?? 0;
-
-  const endHour = endParts[0] ?? 0;
-  const endMinute = endParts[1] ?? 0;
-
-  const startMinutes = startHour * 60 + startMinute;
-  const endMinutes = endHour * 60 + endMinute;
-
-  return Math.max(0, endMinutes - startMinutes);
-};
-
-const toDateString = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const getToday = () => toDateString(new Date());
-
-const getAttendanceDateKey = (value: string) => {
-  const trimmedValue = value.trim();
-  const isoDateKey = trimmedValue.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
-
-  if (isoDateKey) {
-    return isoDateKey;
-  }
-
-  const slashDateMatch = trimmedValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-
-  if (slashDateMatch) {
-    const [, firstPart, secondPart, year] = slashDateMatch;
-    const month = Number(firstPart);
-    const day = Number(secondPart);
-
-    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  }
-
-  return trimmedValue;
-};
-
-const isDateInRange = (date: string, from: string, to: string) => {
-  const dateKey = getAttendanceDateKey(date);
-
-  return (
-    (!from || dateKey >= from) &&
-    (!to || dateKey <= to) &&
-    (!from || !to || from <= to)
-  );
-};
-
-const getExpectedEmployeeDays = (
-  employees: EmployeeRecord[],
-  from: string,
-  to: string,
-) => {
-  const end = new Date(`${to}T00:00:00`);
-
-  return employees.reduce((expectedDays, employee) => {
-    const joiningDate = employee.joining_date.slice(0, 10);
-    const employeeStart = new Date(
-      `${joiningDate > from ? joiningDate : from}T00:00:00`,
-    );
-    let employeeWorkingDays = 0;
-    const current = new Date(employeeStart);
-
-    while (current <= end) {
-      const day = current.getDay();
-      if (day !== 0 && day !== 6) {
-        employeeWorkingDays++;
-      }
-      current.setDate(current.getDate() + 1);
-    }
-
-    return expectedDays + employeeWorkingDays;
-  }, 0);
-};
+import {
+  attendanceExportColumns,
+  formatHours,
+  getWorkedMinutes,
+  toDateString,
+  getToday,
+  getAttendanceDateKey,
+  isDateInRange,
+  getExpectedEmployeeDays,
+} from "../../utills/attendance.utills";
+import ExportData from "../common/ExportData";
 
 function Attendance() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -140,11 +45,13 @@ function Attendance() {
     "All Status",
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [attendanceFormRecord, setAttendanceFormRecord] =
     useState<AttendanceRecord | null>(null);
   const [isAttendanceFormOpen, setIsAttendanceFormOpen] = useState(false);
   const [activeEmployees, setActiveEmployees] = useState<EmployeeRecord[]>([]);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+  const showAttendanceSummary = false;
 
   const getTardinessMinutes = (checkIn: string | null | undefined): number => {
     if (!checkIn) return 0;
@@ -280,6 +187,18 @@ function Attendance() {
     loadData();
   }, [isAdmin]);
 
+  useEffect(() => {
+    const updateTime = () => {
+      setCurrentTime(new Date());
+    };
+
+    updateTime();
+
+    const interval = setInterval(updateTime, 60_000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const filteredRecords = useMemo(
     () =>
       records.filter((record) => {
@@ -347,9 +266,9 @@ function Attendance() {
     : 0;
 
   const overtimeMinutes = summaryRecords.reduce((total, record) => {
-    const workedMinutes = getWorkedMinutes(record);
+    const workedMinutes = getWorkedMinutes(record, currentTime);
 
-    const overtime = Math.max(0, workedMinutes - 8 * 60);
+    const overtime = Math.max(0, workedMinutes - 9 * 60);
 
     return total + overtime;
   }, 0);
@@ -454,11 +373,13 @@ function Attendance() {
           setCurrentPage(1);
         }}
       />
-      <AttendanceSummary
-        presentRate={presentRate}
-        averageTardiness={`${averageTardiness}m`}
-        overtime={overtime}
-      />
+      {showAttendanceSummary && (
+        <AttendanceSummary
+          presentRate={presentRate}
+          averageTardiness={`${averageTardiness}m`}
+          overtime={overtime}
+        />
+      )}
       {isAttendanceFormOpen && (
         <AttendanceForm
           attendance={attendanceFormRecord}

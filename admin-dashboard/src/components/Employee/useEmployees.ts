@@ -28,6 +28,9 @@ export function useEmployees(searchQuery = "") {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [employeeToDeactivate, setEmployeeToDeactivate] =
+    useState<EmployeeRecord | null>(null);
+  const [deactivating, setDeactivating] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Derived values
@@ -119,27 +122,39 @@ export function useEmployees(searchQuery = "") {
   // Handlers
   // ---------------------------------------------------------------------------
 
-  const deactivateEmployee = async (employee: EmployeeRecord) => {
-    const confirmed = window.confirm(
-      `Deactivate ${employee.first_name} ${employee.last_name}?`,
-    );
+  const requestEmployeeDeactivation = (employee: EmployeeRecord) => {
+    setEmployeeToDeactivate(employee);
+  };
 
-    if (!confirmed) {
+  const cancelEmployeeDeactivation = () => {
+    if (!deactivating) {
+      setEmployeeToDeactivate(null);
+    }
+  };
+
+  const deactivateEmployee = async () => {
+    if (!employeeToDeactivate) {
       return;
     }
 
     try {
-      await deleteEmployee(employee.emp_id);
+      setDeactivating(true);
+      await deleteEmployee(employeeToDeactivate.emp_id);
 
       setEmployees((currentEmployees) =>
-        currentEmployees.filter((item) => item.emp_id !== employee.emp_id),
+        currentEmployees.filter(
+          (item) => item.emp_id !== employeeToDeactivate.emp_id,
+        ),
       );
 
       toast.success("Employee deactivated successfully");
+      setEmployeeToDeactivate(null);
     } catch (deleteError) {
       console.error("Failed to deactivate employee:", deleteError);
 
       toast.error("Failed to deactivate employee");
+    } finally {
+      setDeactivating(false);
     }
   };
 
@@ -180,6 +195,10 @@ export function useEmployees(searchQuery = "") {
     setRowsPerPage,
 
     // Actions
+    employeeToDeactivate,
+    deactivating,
+    requestEmployeeDeactivation,
+    cancelEmployeeDeactivation,
     deactivateEmployee,
   };
 }

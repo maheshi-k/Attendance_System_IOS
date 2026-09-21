@@ -59,3 +59,35 @@ export const changePassword = async (
     throw new Error(result.message ?? "Unable to update password");
   }
 };
+
+export const requestPasswordReset = async (email: string) => {
+  const response = await fetch(
+    `${import.meta.env.VITE_BASE_URL ?? "/api"}/auth/forgot-password`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    },
+  );
+  const result = (await response.json()) as { message?: string };
+
+  if (!response.ok) {
+    throw new Error(result.message ?? "Unable to request password reset");
+  }
+};
+
+export const resetPassword = async (token: string, password: string) => {
+  const response = await fetch(
+    `${import.meta.env.VITE_BASE_URL ?? "/api"}/auth/reset-password`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    },
+  );
+  const result = (await response.json()) as { message?: string };
+
+  if (!response.ok) {
+    throw new Error(result.message ?? "Unable to reset password");
+  }
+};
